@@ -1,52 +1,10 @@
 //-----------------------------------------------------------------//
 // Includes
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <Wire.h> //Communication I2C entre les esp32 et le PI
-#include <string.h> //Pour la manipulation des strings
-#include <Adafruit_NeoPixel.h>
+#include "config.h" //Fichier de configuration des broches et paramètres (inclut les bibliothèques nécessaires)
 #include "I2C_Slave.h"
 //#################################################################//
 
 //-----------------------------------------------------------------//
-//Constantes et définitions
-#define SLAVE_ADDR 0x12  // Adresse de l'esclave
-#define SDA_PIN 6
-#define SCL_PIN 7
-
-#define NB_STRIPS 7
-
-#define Neo1_PIN 9
-#define Neo1_COUNT 40
-#define Neo2_PIN 8
-#define Neo2_COUNT 40
-#define Neo3_PIN 5
-#define Neo3_COUNT 40
-#define Neo4_PIN 4
-#define Neo4_COUNT 40
-#define Neo5_PIN 3
-#define Neo5_COUNT 40
-#define Neo6_PIN 1
-#define Neo6_COUNT 9
-#define Neo7_PIN 0
-#define Neo7_COUNT 256
-
-struct NamedColor {
-  const char* name;
-  uint32_t value;
-};
-const NamedColor color_table[] = {
-  { "RED",    Adafruit_NeoPixel::Color(255, 0, 0) },
-  { "GREEN",  Adafruit_NeoPixel::Color(0, 255, 0) },
-  { "BLUE",   Adafruit_NeoPixel::Color(0, 0, 255) },
-  { "YELLOW", Adafruit_NeoPixel::Color(255, 255, 0) },
-  { "CYAN",   Adafruit_NeoPixel::Color(0, 255, 255) },
-  { "MAGENTA",Adafruit_NeoPixel::Color(255, 0, 255) },
-  { "WHITE",  Adafruit_NeoPixel::Color(255, 255, 255) },
-  { "BLACK",  Adafruit_NeoPixel::Color(0, 0, 0) },
-};
-const int NB_COLORS = sizeof(color_table) / sizeof(color_table[0]);
-
 #define ETAPES_BLINK 2 // Allumé et éteint
 #define ETAPES_RAINBOW 256 // Nombre d'étapes pour l'animation Rainbow
 //#################################################################//
