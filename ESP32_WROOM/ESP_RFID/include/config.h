@@ -54,12 +54,17 @@ String const ESP32_NAME = "RFID";
 // Configuration MFRC522
 #define RST_PIN     0
 
+// ==============================================================================================================
+// Configuration des broches SS pour les lecteurs RFID
+// Les broches SS sont utilisées pour sélectionner le lecteur RFID actif lors de la communication SPI.
+// Si vous voulez ajouter ou retirer des lecteurs, modifiez les broches SS ici et ajustez le tableau ssPins en conséquence.
+// ===============================================================================================================
+#define NR_OF_READERS 4 // Nombre de lecteurs RFID connectés (doit correspondre au nombre de broches SS définies)
+
 #define SS_1_PIN    3
 #define SS_2_PIN    1
 #define SS_3_PIN    18
 #define SS_4_PIN    19
-
-#define NR_OF_READERS 4
 
 byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN}; // Tableau des broches SS
 

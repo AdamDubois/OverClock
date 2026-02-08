@@ -29,18 +29,18 @@ MFRC522 mfrc522[NR_OF_READERS];   // Create MFRC522 instance.
 
 //Strings contenant les UID des cartes lues
 String g_uidReaders[NR_OF_READERS] = {"NONE", "NONE", "NONE", "NONE"}; // UIDs des cartes lues
-String g_stringComplet = ""; //String complète JSON à envoyer au maître
 
 
 
 // ============================================================================================================
 // Déclarations des fonctions
 // ============================================================================================================
+
 void onRequest();
 void resetUIDs();
 void scanReaders();
 String getUIDsAsString(byte *buffer, byte bufferSize);
-void formatDataAsJSON();
+String formatDataAsJSON();
 
 
 
@@ -79,7 +79,7 @@ void setup() {
 }
 
 /*
-Brief : Boucle principale vide car l'ESP32 agit en tant qu'esclave I2C.
+Brief : Boucle principale vide, car l'ESP32 agit en tant qu'esclave I2C.
 */
 void loop() {}
 
@@ -93,15 +93,17 @@ Brief : Fonction de rappel appelée lorsqu'une demande est reçue du maître I2C
         Scanne les lecteurs RFID, lit les UIDs des cartes, et envoie les données formatées en JSON au maître.
 */
 void onRequest() {
+  String jsonData = ""; // String pour stocker les données JSON à envoyer
+
   debug("Maître a demandé les données.\n");
 
   resetUIDs();
 
   scanReaders();
 
-  formatDataAsJSON();
+  jsonData = formatDataAsJSON();
 
-  Wire.write(g_stringComplet.c_str()); // Envoyer les données lues
+  Wire.write(jsonData.c_str()); // Envoyer les données lues
   Wire.write((uint8_t)0x00); // Indicateur de fin de message
 
   debug("Données envoyées au maître.\n");
@@ -163,15 +165,18 @@ String getUIDsAsString(byte *buffer, byte bufferSize) {
 
 /*
 Brief : Formate les données des lecteurs RFID en une chaîne JSON.
+Retour : Chaîne JSON contenant le nom de l'ESP32 et les UIDs des lecteurs RFID.
 */
-void formatDataAsJSON() {
-  g_stringComplet = "{N:\"" + ESP32_NAME + "\","; // Réinitialiser la chaîne avec le nom de l'ESP32
+String formatDataAsJSON() {
+  String jsonString = "{N:\"" + ESP32_NAME + "\","; // Réinitialiser la chaîne avec le nom de l'ESP32
 
   for (int i = 0; i < NR_OF_READERS; i++) {
-    g_stringComplet += "R" + String(i) + ":\"" + g_uidReaders[i] + "\"";
+    jsonString += "R" + String(i) + ":\"" + g_uidReaders[i] + "\"";
     if (i < NR_OF_READERS - 1) {
-      g_stringComplet += ",";
+      jsonString += ",";
     }
   }
-  g_stringComplet += "}";
+  jsonString += "}";
+
+  return jsonString;
 }
