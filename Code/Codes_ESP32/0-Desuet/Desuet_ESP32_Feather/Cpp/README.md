@@ -6,5 +6,4 @@ Ce dossier contient un projet en C++ avec PlatformIO pour un ESP32-Feather qui e
 
 ## Architecture de ce dossier
 
-Ce dossier contient les fichiers de code pour le projet ESP32-Feather obsolète. Il est organisé de la manière suivante :
 - `src/` : Contient tous les fichiers de code qui ont été écrits en C++ pour le projet ESP32-Feather. Ces fichiers ne sont plus utilisés, mais ils sont conservés à des fins de référence.
