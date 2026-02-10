@@ -23,6 +23,7 @@
 #include <Wire.h> //Communication I2C entre les esp32 et le PI
 #include <SPI.h> //Bibliothèque SPI pour la communication avec le MFRC522
 #include <MFRC522.h> //Bibliothèque MFRC522 pour la gestion du lecteur RFID
+//#include <Adafruit_NeoPixel.h> //Bibliothèque pour les NeoPixels
 
 
 
@@ -40,6 +41,10 @@
 
 // Nom de l'ESP32 esclave
 String const ESP32_NAME = "RFID";
+
+// Néopixel de l'ESP32 esclave
+#define NEOPIXEL_PIN 8
+#define NEOPIXEL_COUNT 1
 
 // Configuration I2C
 #define SLAVE_ADDR  0x11
