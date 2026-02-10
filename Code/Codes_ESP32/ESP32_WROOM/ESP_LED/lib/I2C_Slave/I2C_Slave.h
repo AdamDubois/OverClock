@@ -4,7 +4,7 @@
 class I2C_Slave {
 public:
     void init();
-    void commandeMaitre(int howMany);
+    static void commandeMaitre(int howMany);
     void direBonjour();
 };
 
