@@ -23,6 +23,7 @@
 #include <Wire.h> //Communication I2C entre les esp32 et le PI
 #include <SPI.h> //Bibliothèque SPI pour la communication avec le MFRC522
 #include <MFRC522.h> //Bibliothèque MFRC522 pour la gestion du lecteur RFID
+#include <Adafruit_NeoPixel.h> //Bibliothèque pour la gestion du NeoPixel
 
 
 
@@ -70,6 +71,6 @@ String const ESP32_NAME = "RFID";
 #define SS_3_PIN    18
 #define SS_4_PIN    19
 
-byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN}; // Tableau des broches SS
-
+//xtern byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN}; // Tableau des broches SS
+extern byte ssPins[]; // Tableau des broches SS
 #endif // CONFIG_H

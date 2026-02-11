@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------//
 // Includes
 #include "config.h" //Fichier de configuration des broches et paramètres (inclut les bibliothèques nécessaires)
-#include "I2C_Slave.h"
+//#include "I2C_Slave.h"
 //#################################################################//
 
 //-----------------------------------------------------------------//
@@ -11,7 +11,7 @@
 
 //-----------------------------------------------------------------//
 // Variables globales
-I2C_Slave i2cSlave; // Création d'une instance de la classe I2C_Slave
+//I2C_Slave i2cSlave; // Création d'une instance de la classe I2C_Slave
 
 String g_stringOfAllData = "";
 bool g_News = false;
