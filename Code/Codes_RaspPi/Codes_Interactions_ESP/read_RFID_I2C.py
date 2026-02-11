@@ -25,7 +25,7 @@ try:
         except Exception as e:
             print("Erreur de lecture I2C:", e)
 
-        time.sleep(1)
+        #time.sleep(1)
 
 except KeyboardInterrupt:
     print("\nFin du programme !")
