@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------//
 // Includes
-#include "config.h" //Fichier de configuration des broches et paramètres (inclut les bibliothèques nécessaires)
-//#include "I2C_Slave.h"
+#include <config.h> //Fichier de configuration des broches et paramètres (inclut les bibliothèques nécessaires)
+#include <Debug_Neo.h> // Bibliothèque de gestion des NeoPixels et des animations
+#include <Strips_Neo.h> // Bibliothèque de gestion des NeoPixels et des animations
+#include <I2C_Slave.h>
 //#################################################################//
 
 //-----------------------------------------------------------------//
@@ -11,21 +13,14 @@
 
 //-----------------------------------------------------------------//
 // Variables globales
-//I2C_Slave i2cSlave; // Création d'une instance de la classe I2C_Slave
+I2C_Slave i2cSlave; // Création d'une instance de la classe I2C_Slave
+
+Debug_Neo DebugNeo; // Création d'une instance de la classe Debug_Neo
+Strips_Neo StripsNeo; // Création d'une instance de la classe Strips_Neo
 
 String g_stringOfAllData = "";
 bool g_News = false;
 
-// Tableau des objets NeoPixel
-Adafruit_NeoPixel strips[] = {
-  Adafruit_NeoPixel(Neo1_COUNT, Neo1_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(Neo2_COUNT, Neo2_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(Neo3_COUNT, Neo3_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(Neo4_COUNT, Neo4_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(Neo5_COUNT, Neo5_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(Neo6_COUNT, Neo6_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(Neo7_COUNT, Neo7_PIN, NEO_GRB + NEO_KHZ800),
-};
 
 String g_stringVerif = "";
 int g_intStrip[NB_STRIPS] = {0};
@@ -53,7 +48,8 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  initNeoPixels();
+  StripsNeo.init();
+  DebugNeo.init();
 
   // Initialisation de l'I2C en tant qu'esclave avec l'adresse définie
   Wire.setPins(SDA_PIN, SCL_PIN);
@@ -64,20 +60,24 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  DebugNeo.waiting();
   if (g_News) // S'il y a des nouvelles données à traiter
   {
+    DebugNeo.working();
     Serial.print("Données reçues dans loop: ");
     Serial.println(g_stringOfAllData);
 
     if(g_stringOfAllData == "") 
     {
         Serial.println("Aucune donnée reçue.");
+        DebugNeo.error();
     }
     else if(g_stringOfAllData == "TEST_NEO")
     {
         Serial.println("Lancement du test NeoPixels...");
         //testNeoPixels();
         resetVariablesGlobals(); // Réinitialise les variables après exécution
+        DebugNeo.success();
     }
     else
     {
@@ -86,6 +86,7 @@ void loop() {
         {
             Serial.println("Échec du traitement du message UART.");
             resetVariablesGlobals();
+            DebugNeo.error();
         }
     }
     g_News = false; // Réinitialise le drapeau
@@ -96,6 +97,7 @@ void loop() {
       Serial.println("Commande Stat reçue.");
       commandeStat(i);
       resetVariablesGlobals(); // Réinitialise les variables après exécution
+      DebugNeo.success();
     }
     else if (g_stringCmd[i] == "Anim")
     {
@@ -107,6 +109,7 @@ void loop() {
       {
           //commandeAnim();
           g_delayAnim[i] = 0; // Délai entre les étapes
+          DebugNeo.success();
       }
     }
   }
@@ -121,19 +124,6 @@ void loop() {
     {
       g_delayAnim[i] = 0;
     }
-  }
-}
-
-// put function definitions here:
-/*
-Brief : Initialisation des NeoPixels
-*/
-void initNeoPixels() 
-{
-  for (uint8_t i = 0; i < NB_STRIPS; i++) {
-    strips[i].begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-    strips[i].show();            // Turn OFF all pixels ASAP
-    strips[i].setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
   }
 }
 
@@ -256,7 +246,8 @@ Brief :  Exécute la commande "Stat".
 */
 void commandeStat(int str)
 {
-    strips[str].setBrightness(g_intBrightness[str]); // Set brightness
-    strips[str].fill(getColorByName(g_stringCouleur[str]), g_intDebut[str], g_intNombre[str]); // Fill specified section with the given color
-    strips[str].show(); // Update strip to match
+      StripsNeo.strips[str].setBrightness(g_intBrightness[str]);
+      uint32_t color = getColorByName(g_stringCouleur[str]);
+      StripsNeo.strips[str].fill(color);
+      StripsNeo.strips[str].show();
 }

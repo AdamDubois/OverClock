@@ -1,0 +1,7 @@
+{
+    "name": "I2C_Slave",
+    "version": "1.0.0",
+    "dependencies": {
+        "config":"*"
+    }
+}

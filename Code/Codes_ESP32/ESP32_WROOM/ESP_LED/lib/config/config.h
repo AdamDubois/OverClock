@@ -43,6 +43,12 @@ String const ESP32_NAME = "NEO";
 
 
 
+// NéoPixel de débogage
+#define NEOPIXEL_PIN 8
+#define NEOPIXEL_COUNT 1
+
+
+
 // Configuration I2C
 #define SLAVE_ADDR  0x12
 #define SDA_PIN     6

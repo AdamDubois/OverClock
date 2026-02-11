@@ -18,7 +18,3 @@ void I2C_Slave::commandeMaitre(int howMany) {
     }
     Serial.println("Données reçues du maître: " + receivedData);
 }
-
-void I2C_Slave::direBonjour() {
-    Serial.println("Bonjour depuis I2C_Slave !");
-}
