@@ -60,7 +60,7 @@ String const ESP32_NAME = "NEO";
 #define NB_STRIPS 7
 
 #define Neo1_PIN 9
-#define Neo1_COUNT 40
+#define Neo1_COUNT 28
 #define Neo2_PIN 10
 #define Neo2_COUNT 40
 #define Neo3_PIN 5

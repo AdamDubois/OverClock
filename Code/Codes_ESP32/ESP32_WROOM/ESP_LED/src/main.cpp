@@ -56,6 +56,15 @@ void setup() {
   Wire.begin(SLAVE_ADDR);
   Wire.onReceive(commandeI2C);
   Serial.println("Slave prêt, en attente de requêtes du maître...");
+  StripsNeo.allRed(); // Test de tous les NeoPixels avec un effet rouge au démarrage
+  delay(1000);
+  StripsNeo.allGreen(); // Test de tous les NeoPixels avec un effet vert au démarrage
+  delay(1000);
+  StripsNeo.allBlue(); // Test de tous les NeoPixels avec un effet bleu au démarrage
+  delay(1000);
+  StripsNeo.allWhite(); // Test de tous les NeoPixels avec un effet blanc au démarrage
+  delay(1000);
+  StripsNeo.waterEffect(0, 0xFF0000, 150); // Test de l'effet eau sur le strip 0
 }
 
 void loop() {
