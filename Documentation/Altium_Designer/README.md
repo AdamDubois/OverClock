@@ -8,6 +8,6 @@ Cette section de la documentation regroupe l'ensemble des fichiers de conception
 Elle contient les éléments suivants :
 - Les schémas électriques du projet
 - Les fichiers PCB (routage)
-- Le dossier Librairies contenant les composante utilisées dans les schémas et PCB
+- Le dossier Bibliothèques contenant les composante utilisées dans les schémas et PCB
 
 Les composants standards utilisés dans ce projet proviennent de la bibliothèque externe **Celestial Altium Library**.
