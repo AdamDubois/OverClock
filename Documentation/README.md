@@ -8,3 +8,4 @@ Ici vous trouverez tous les documents liés au projet Bombe, y compris les diagr
 
 Ce dossier contient les fichiers de documentation pour les différents composants du projet Bombe. Il est organisé de la manière suivante :
 - `Altium_Designer/` : Contiendra les schémas électriques et les PCB conçus avec Altium Designer pour les différents composants du projet.
+- - `Références/` : Contient toutes les références utiles à la compréhension du système et des schémas électriques (documents techniques, fiches techniques, notes, etc.).
