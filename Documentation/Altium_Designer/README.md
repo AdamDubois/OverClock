@@ -2,9 +2,12 @@
 
 ## Description
 
-Ici vous trouverez tous les documents liés au projet Bombe, y compris les diagrammes d'architecture, les schémas de câblage, les instructions d'installation et d'utilisation, les schémas électiques d'Altium, etc. Ce dossier est destiné à fournir une documentation complète pour le projet Bombe afin de faciliter la compréhension et la mise en œuvre du projet pour tous les membres de l'équipe et les futurs contributeurs.
-
+Cette section de la documentation regroupe l'ensemble des fichiers de conception électrique et de PCB réalisés avec le logiciel Altium Designer.
 ## Architecture de ce dossier
 
-Ce dossier contient les fichiers de documentation pour les différents composants du projet Bombe. Il est organisé de la manière suivante :
-- `Altium_Designer/` : Contiendra les schémas électriques et les PCB conçus avec Altium Designer pour les différents composants du projet.
+Elle contient les éléments suivants :
+- Les schémas électriques du projet
+- Les fichiers PCB (routage)
+- Le dossier Bibliothèques contenant les composante utilisées dans les schémas et PCB
+
+Les composants standards utilisés dans ce projet proviennent de la bibliothèque externe **Celestial Altium Library**.
