@@ -97,10 +97,6 @@ void onRequest() {
   Wire.write(jsonData.c_str());
   Wire.write(0x00); // Ajouter un caractère de nouvelle ligne pour indiquer la fin des données
 
-  debug("Current states: S0=%d, S1=%d, S2=%d, S3=%d, BTN0=%d, BTN1=%d, BTN2=%d, BTN3=%d, BTN4=%d, BANA0=%d, BANA1=%d, BANA2=%d, BANA3=%d, BANA4=%d, BANA5=%d, BANA6=%d\n",
-        states[0], states[1], states[2], states[3],
-        states[4], states[5], states[6], states[7], states[8],
-        states[9], states[10], states[11], states[12], states[13], states[14], states[15]);
   debug("Données JSON envoyées : %s\n", jsonData.c_str());
   
   Neo.success(); // Indiquer que les données ont été préparées avec succès
@@ -116,17 +112,11 @@ Retour :
 */
 String formatDataAsJSON(int* states) {
   String jsonData = ""; // String pour stocker les données JSON à envoyer
-
+  
   // Construire la chaîne JSON
   jsonData = "{N:\"" + ESP32_NAME + "\"";
-  for (int i = 0; i < 4; i++) {
-    jsonData += ",S" + String(i) + ":" + String(states[i]);
-  }
-  for (int i = 0; i < 5; i++) {
-    jsonData += ",BTN" + String(i) + ":" + String(states[4 + i]);
-  }
-  for (int i = 0; i < 7; i++) {
-    jsonData += ",BANA" + String(i) + ":" + String(states[9 + i]);
+  for (int i = 0; i < NB_INPUTS; i++) {
+    jsonData += ",\"" + NAME_INPUTS[i] + "\":" + String(states[i]);
   }
   jsonData += "}";
 
@@ -151,22 +141,28 @@ void initMCP() {
 
   for (int i = 0; i < NB_PINS; i++)
   {
-    mcp.pinMode(i, TYPE_PIN[i]);
+    if (TYPE_PIN[i] == INPUT || TYPE_PIN[i] == INPUT_PULLUP || TYPE_PIN[i] == INPUT_PULLDOWN || TYPE_PIN[i] == OUTPUT)
+    {
+      mcp.pinMode(i, TYPE_PIN[i]);
+    }
   }
-  
 }
 
 /*
-Brief : Lit l'état de tous les boutons/switches/bananes connectés au MCP23S17 et retourne un tableau d'entiers représentant ces états.
+Brief : Lit l'état de tous les inputes (boutons/switches/bananes) connectés au MCP23S17 et retourne un tableau d'entiers représentant ces états.
 Retour :
 - Tableau d'entiers où chaque élément correspond à l'état d'un bouton/switch/banane (0 ou 1).
 */
 int* readAllMCP() {
-  static int states[16];
+  int states[NB_INPUTS];
+  int compteur = 0;
 
-  for (int i = 0; i < NB_INPUTS; i++) 
+  for (int i = 0; i < NB_PINS; i++) 
   {
-    states[i] = mcp.digitalRead(i);
+    if (TYPE_PIN[i] == INPUT || TYPE_PIN[i] == INPUT_PULLUP || TYPE_PIN[i] == INPUT_PULLDOWN) {
+      states[compteur++] = mcp.digitalRead(i);
+      compteur++;
+    }
   }
 
   return states;

@@ -56,12 +56,16 @@ String const ESP32_NAME = "IO";
 #define RST_PIN     0
 #define CS_PIN      3
 
-#define NB_PINS 16 // Nombre total de broches du MCP23S17
+#define NB_PINS 16 // Nombre total de broches du MCP23S17 (Devrait rester à 16 si le mcp n'est pas changé)
 #define NB_INPUTS 16 // Nombre total d'entrées
-#define NB_OUTPUTS 0 // Nombre total de sorties
+#define NB_OUTPUTS 0 // Nombre total de sorties (Ne font rien nativement dans le code. Si on veut les utiliser, il faudra modifier le code pour les gérer)
+#define NB_INUTILISEES 0 // Nombre de broches inutilisées (NB_INPUTS + NB_OUTPUTS + NB_INUTILISEES doit être égal à NB_PINS)
 
-#if (NB_INPUTS + NB_OUTPUTS > NB_PINS)
-    #error "Le nombre total d'entrées et de sorties ne peut pas dépasser le nombre total de broches du MCP23S17."
+#if (NB_PINS != 16)
+    #error "Le nombre de broches du MCP23S17 doit être égal à 16. Si vous utilisez un autre MCP, veuillez ajuster cette valeur et vérifier que les autres paramètres sont corrects."
+#endif
+#if (NB_INPUTS + NB_OUTPUTS + NB_INUTILISEES != NB_PINS)
+    #error "Le nombre total d'entrées, de sorties et de broches inutilisées doit être égal au nombre total de broches du MCP23S17."
 #endif
 
 // Configuration des numéros de broches pour les différents IO
@@ -84,7 +88,7 @@ String const ESP32_NAME = "IO";
 // 8	            GPB7	    15
 
 // Le type peut être INPUT, OUTPUT, INPUT_PULLUP ou INPUT_PULLDOWN
-
+// Si une broche n'est pas utilisée, elle peut être définie comme -1 ou tout autre valeur qui n'est pas un type valide.
 int* const TYPE_PIN = new int[NB_PINS] {
     INPUT_PULLUP,  // GPA0
     INPUT_PULLUP,  // GPA1
@@ -104,8 +108,14 @@ int* const TYPE_PIN = new int[NB_PINS] {
     INPUT_PULLUP   // GPB7
 };
 
-// Ici, le numéro des différents boutons/switches/bananes peut être changé. Donc BANA0 pourrait 
-String* const NAME_PIN = new String[NB_PINS] {
+// Ici, le numéro ou le nom des différents boutons/switches/bananes peut être changé.
+// Le nom désigne les noms qui seront utilisés dans la chaîne JSON envoyée au maître I2C, donc ils peuvent aussi être changés. 
+// Par exemple, BTN0 pourrait être "StartButton" ou "EmergencyStop"
+// L'ordre des éléments dans ce tableau doit correspondre à l'ordre des broches définies dans TYPE_PIN. 
+// Par exemple, si GPA0 est défini comme une entrée pour une banane, alors le premier élément de NAME_INPUTS 
+// doit être le nom de cette banane.
+// Si une broche n'est pas utilisée ou est un OUTPUT, elle ne doit pas être incluse dans ce tableau.
+String* const NAME_INPUTS = new String[NB_INPUTS] {
     "BANA0",    // GPA0
     "BANA1",    // GPA1
     "BANA2",    // GPA2
