@@ -7,7 +7,7 @@ void Debug_Neo::init() {
     // Initialisation du NeoPixel
     strip = Adafruit_NeoPixel(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
     strip.begin();
-    strip.setBrightness(10); // Set brightness to about 1/5 (max = 255)
+    strip.setBrightness(10); // Set brightness (max = 255)
     strip.show(); // Initialize all pixels to 'off'
 }
 

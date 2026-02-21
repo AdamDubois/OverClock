@@ -56,6 +56,14 @@ String const ESP32_NAME = "IO";
 #define RST_PIN     0
 #define CS_PIN      3
 
+#define NB_PINS 16 // Nombre total de broches du MCP23S17
+#define NB_INPUTS 16 // Nombre total d'entrées
+#define NB_OUTPUTS 0 // Nombre total de sorties
+
+#if (NB_INPUTS + NB_OUTPUTS > NB_PINS)
+    #error "Le nombre total d'entrées et de sorties ne peut pas dépasser le nombre total de broches du MCP23S17."
+#endif
+
 // Configuration des numéros de broches pour les différents IO
 // MCP23S17 Pin #	Pin Name	Pin ID
 // 21	            GPA0	    0
@@ -74,23 +82,46 @@ String const ESP32_NAME = "IO";
 // 6	            GPB5	    13
 // 7	            GPB6	    14
 // 8	            GPB7	    15
-#define SW0_PIN 0
-#define SW1_PIN 1
-#define SW2_PIN 2
-#define SW3_PIN 3
 
-#define BTN0_PIN 4
-#define BTN1_PIN 5
-#define BTN2_PIN 6
-#define BTN3_PIN 7
-#define BTN4_PIN 8
+// Le type peut être INPUT, OUTPUT, INPUT_PULLUP ou INPUT_PULLDOWN
 
-#define BANA0_PIN 9
-#define BANA1_PIN 10
-#define BANA2_PIN 11
-#define BANA3_PIN 12
-#define BANA4_PIN 13
-#define BANA5_PIN 14
-#define BANA6_PIN 15
+int* const TYPE_PIN = new int[NB_PINS] {
+    INPUT_PULLUP,  // GPA0
+    INPUT_PULLUP,  // GPA1
+    INPUT_PULLUP,  // GPA2
+    INPUT_PULLUP,  // GPA3
+    INPUT_PULLUP,  // GPA4
+    INPUT_PULLUP,  // GPA5
+    INPUT_PULLUP,  // GPA6
+    INPUT_PULLUP,  // GPA7
+    INPUT_PULLUP,  // GPB0
+    INPUT_PULLUP,  // GPB1
+    INPUT_PULLUP,  // GPB2
+    INPUT_PULLUP,  // GPB3
+    INPUT_PULLUP,  // GPB4
+    INPUT_PULLUP,  // GPB5
+    INPUT_PULLUP,  // GPB6
+    INPUT_PULLUP   // GPB7
+};
+
+// Ici, le numéro des différents boutons/switches/bananes peut être changé. Donc BANA0 pourrait 
+String* const NAME_PIN = new String[NB_PINS] {
+    "BANA0",    // GPA0
+    "BANA1",    // GPA1
+    "BANA2",    // GPA2
+    "BANA3",    // GPA3
+    "BANA4",    // GPA4
+    "BANA5",    // GPA5
+    "BANA6",    // GPA6
+    "SW3",      // GPA7
+    "BTN2",     // GPB0
+    "BTN1",     // GPB1
+    "BTN0",     // GPB2
+    "BTN3",     // GPB3
+    "BTN4",     // GPB4
+    "SW0",      // GPB5
+    "SW1",      // GPB6
+    "SW2"       // GPB7
+};
 
 #endif // CONFIG_H

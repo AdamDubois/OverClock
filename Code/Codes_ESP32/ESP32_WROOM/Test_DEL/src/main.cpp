@@ -4,7 +4,7 @@
 // Which pin on the ESP32 is connected to the NeoPixels? In this case, pin 4
 #define LED1_PIN 9
 // How many NeoPixels are attached to the Arduino?
-#define LED1_COUNT 40
+#define LED1_COUNT 256
 // Declare our NeoPixel strip object:
 
 #define LED2_PIN 8
@@ -62,18 +62,53 @@ void initNeoPixels();
 void setup() {
   // put your setup code here, to run once:
   initNeoPixels();
+  // for (int i = 0; i < 150; i++) {
+  //   strips[0].setPixelColor(i, strips[0].Color(255, 255, 255)); // blanc
+  //   strips[0].show();
+  // }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  delay(250);
-  for (uint8_t i = 0; i < NUM_STRIPS; i++) {
-    strips[i].fill(colors[colorIndex[i]]);
-    strips[i].show();
-    colorIndex[i]++;
-    if (colorIndex[i] >= NUM_COLORS) {
-      colorIndex[i] = 0;
+  int index_r = 0;
+  int index_g = 0;
+  int index_b = 0;
+
+  for (index_r = 0 ; index_r < LED1_COUNT + 2; index_r++) {
+    index_g = index_r - 1;
+    index_b = index_r - 2;
+
+    if (index_g < 0) {
+      strips[0].fill(strips[0].Color(0, 0, 0)); // éteint tous les pixels
+      strips[0].setPixelColor(index_r, strips[0].Color(255, 0, 0)); // rouge
+      strips[0].show();
     }
+    else if (index_b < 0) {
+      strips[0].fill(strips[0].Color(0, 0, 0)); // éteint tous les pixels
+      strips[0].setPixelColor(index_r, strips[0].Color(255, 0, 0)); // rouge
+      strips[0].setPixelColor(index_g, strips[0].Color(0, 255, 0)); // vert
+      strips[0].show();
+    }
+    else if (index_g == LED1_COUNT - 1) {
+      strips[0].fill(strips[0].Color(0, 0, 0)); // éteint tous les pixels
+      strips[0].setPixelColor(index_g, strips[0].Color(0, 255, 0)); // vert
+      strips[0].setPixelColor(index_b, strips[0].Color(0, 0, 255)); // bleu
+      strips[0].show();
+    }
+    else if (index_b == LED1_COUNT - 1) {
+      strips[0].fill(strips[0].Color(0, 0, 0)); // éteint tous les pixels
+      strips[0].setPixelColor(index_b, strips[0].Color(0, 0, 255)); // bleu
+      strips[0].show();
+    }
+    else {
+      strips[0].fill(strips[0].Color(0, 0, 0)); // éteint tous les pixels
+      strips[0].setPixelColor(index_r, strips[0].Color(255, 0, 0)); // rouge
+      strips[0].setPixelColor(index_g, strips[0].Color(0, 255, 0)); // vert
+      strips[0].setPixelColor(index_b, strips[0].Color(0, 0, 255)); // bleu
+      strips[0].show();
+    }
+    
+    delay(0);
   }
 }
 
@@ -83,6 +118,6 @@ void initNeoPixels()
   for (uint8_t i = 0; i < NUM_STRIPS; i++) {
     strips[i].begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
     strips[i].show();            // Turn OFF all pixels ASAP
-    strips[i].setBrightness(100); // Set BRIGHTNESS to about 1/5 (max = 255)
+    strips[i].setBrightness(255); // Set BRIGHTNESS to about 1/5 (max = 255)
   }
 }
