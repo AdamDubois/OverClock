@@ -1,8 +1,0 @@
-{
-    "name": "Debug_Neo",
-    "version": "1.0.0",
-    "dependencies": {
-        "config":"*",
-        "Adafruit_NeoPixel":"*"
-    }
-}

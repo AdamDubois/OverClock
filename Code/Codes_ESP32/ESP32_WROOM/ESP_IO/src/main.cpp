@@ -77,7 +77,7 @@ void setup()
 /*
 Brief : Boucle principale vide, car l'ESP32 agit en tant qu'esclave I2C.
 */
-void loop(){};
+void loop(){}
 
 // ============================================================================================================
 // Définitions des fonctions

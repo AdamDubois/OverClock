@@ -8,7 +8,7 @@
  * à ces changements pour éviter les conflits et les erreurs. Si vous n'êtes pas sûr de ce que vous faites, il est recommandé 
  * de laisser les paramètres tels quels.
  * @author Adam Dubois
- * @date 2026-02-
+ * @date 2026-02-22
  * @version 1.0
  * 
  * La configuration des broches et des paramètres se trouve dans ce fichier. C'est dans ce fichier que vous devez faire les changements si vous souhaitez ajuster la configuration du projet.

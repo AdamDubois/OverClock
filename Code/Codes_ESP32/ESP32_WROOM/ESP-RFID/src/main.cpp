@@ -18,7 +18,6 @@
 // Includes
 // ============================================================================================================
 #include <config.h> //Fichier de configuration des broches et paramètres (inclut les bibliothèques nécessaires)
-#include <Debug_Neo.h> //Classe pour gérer les LEDs NeoPixel (lib/SImple_Neo/Simple_Neo.h)
 
 
 
@@ -43,6 +42,9 @@ byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN};
 // Déclarations des fonctions
 // ============================================================================================================
 
+void initSerial();
+void initI2C();
+void initSPI();
 void onRequest();
 void resetUIDs();
 void scanReaders();
@@ -58,17 +60,63 @@ String formatDataAsJSON();
 Brief : Initialisation de l'ESP32 en tant qu'esclave I2C et des lecteurs RFID MFRC522.
 */
 void setup() {
-  Serial.begin(9600); // Initialisation de la communication série pour le débogage
-  while (!Serial);    // Attendre que le port série soit prêt
+  initSerial();
 
+  debug("\n");
+  debug("Initialisation de l'ESP32 %s...\n", ESP32_NAME.c_str());
+
+  initI2C(); // Initialiser l'I2C en tant qu'esclave
+
+  debug("I2C slave initialized with address 0x%02X\n", SLAVE_ADDR);
+
+  initSPI(); // Initialiser le SPI pour les lecteurs RFID
+
+  Neo.init(); // Initialiser les LEDs NeoPixel
+
+  debug("Initialisation terminée. En attente des demandes du maître I2C...\n");
+}
+
+/*
+Brief : Boucle principale vide, car l'ESP32 agit en tant qu'esclave I2C.
+*/
+void loop(){}
+
+
+
+// ============================================================================================================
+// Définitions des fonctions
+// ============================================================================================================
+
+/*
+Brief : Initialise le port série pour le débogage si le mode de débogage est activé dans config.h.
+*/
+void initSerial()
+{
+  if (DEBUG_MODE)
+  {
+    Serial.begin(9600);
+    while (!Serial); // Attendre que le port série soit prêt
+    delay(1000); // Attendre un moment pour s'assurer que tout les caractères de démarrage sont envoyés avant d'afficher les logs de débogage (peut être retirer pour un démarrage plus rapide)
+  }
+}
+
+/*
+Brief : Initialise l'ESP32 en tant qu'esclave I2C avec l'adresse définie dans config.h et 
+configure la fonction de rappel pour les demandes du maître.
+*/
+void initI2C()
+{
   // Initialisation de l'I2C en tant qu'esclave avec l'adresse définie
   Wire.setPins(SDA_PIN, SCL_PIN);
   Wire.begin(SLAVE_ADDR);
   Wire.onRequest(onRequest); // Définir la fonction de rappel pour les demandes du maître
+}
 
-  debug("\n");
-  debug("I2C slave initialized with address 0x%02X\n", SLAVE_ADDR);
-
+/*
+Brief : Initialise le SPI pour les lecteurs RFID MFRC522 et configure chaque lecteur avec les broches définies dans config.h.
+*/
+void initSPI()
+{
   // Initialiser SPI matériel avec broches compatibles ESP32-C3
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, -1); // -1: pas de SS global
 
@@ -83,24 +131,11 @@ void setup() {
       mfrc522[reader].PCD_DumpVersionToSerial();
     }
   }
-
-  Neo.init(); // Initialiser les LEDs NeoPixel
-  Neo.waiting(); // Indiquer que le système est en attente
 }
 
 /*
-Brief : Boucle principale vide, car l'ESP32 agit en tant qu'esclave I2C.
-*/
-void loop() {}
-
-
-
-// ============================================================================================================
-// Définitions des fonctions
-// ============================================================================================================
-/*
 Brief : Fonction de rappel appelée lorsqu'une demande est reçue du maître I2C.
-        Scanne les lecteurs RFID, lit les UIDs des cartes, et envoie les données formatées en JSON au maître.
+Scanne les lecteurs RFID, lit les UIDs des cartes, et envoie les données formatées en JSON au maître.
 */
 void onRequest() {
   Neo.working(); // Indiquer que le système est en train de travailler
