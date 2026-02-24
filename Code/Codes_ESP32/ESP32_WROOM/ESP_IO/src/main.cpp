@@ -195,7 +195,7 @@ String formatDataAsJSON(int* states)
   jsonData = "{N:\"" + ESP32_NAME + "\"";
   for (int i = 0; i < NB_INPUTS; i++)
   {
-    jsonData += ",\"" + NAME_INPUTS[i] + "\":" + String(states[i]);
+    jsonData += "," + NAME_INPUTS[i] + ":" + String(states[i]);
   }
   jsonData += "}";
 

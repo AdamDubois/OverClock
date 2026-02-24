@@ -76,7 +76,7 @@ Tous les paramètres sont dans `include/config.h` :
 ## Format de sortie JSON
 
 ```json
-{N:"IO","BANA0":1,"BANA1":0,"BANA2":1,"BANA3":0,"BANA4":1,"BANA5":0,"BANA6":1,"SW3":0,"BTN2":1,"BTN1":0,"BTN0":1,"BTN3":0,"BTN4":1,"SW0":0,"SW1":1,"SW2":0}
+{N:"IO",BANA0:1,BANA1:0,BANA2:1,BANA3:0,BANA4:1,BANA5:0,BANA6:1,SW3:0,BTN2:1,BTN1:0,BTN0:1,BTN3:0,BTN4:1,SW0:0,SW1:1,SW2:0}
 ```
 
 - `N` : Nom de l'ESP32

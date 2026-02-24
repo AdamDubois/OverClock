@@ -199,6 +199,7 @@ const int TYPE_PIN[] = {
     INPUT_PULLUP   // GPB7
 };
 
+// Vérification que le nombre d'éléments dans TYPE_PIN correspond au nombre total de broches du MCP23S17
 static_assert(sizeof(TYPE_PIN)/sizeof(TYPE_PIN[0]) == NB_PINS, "TYPE_PIN doit contenir NB_PINS éléments.");
 
 // Ici, le numéro ou le nom des différents boutons/switches/bananes peut être changé.
@@ -227,6 +228,7 @@ const String NAME_INPUTS[] = {
     "SW2"       // GPB7
 };
 
+// Vérification que le nombre d'éléments dans NAME_INPUTS correspond au nombre total d'entrées définies dans NB_INPUTS
 static_assert(sizeof(NAME_INPUTS)/sizeof(NAME_INPUTS[0]) == NB_INPUTS, "NAME_INPUTS doit contenir NB_INPUTS éléments.");
 
 #endif // CONFIG_H
