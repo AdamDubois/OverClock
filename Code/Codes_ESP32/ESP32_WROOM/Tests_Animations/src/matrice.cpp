@@ -1,0 +1,160 @@
+#include "matrice.h"
+
+/*
+Brief : Cette fonction convertit une couleur au format 0xAARRGGBB en un objet CRGB de FastLED.
+Paramètre : 
+  - c - la couleur au format 0xAARRGGBB (Alpha, Rouge, Vert, Bleu)
+
+Retour : 
+  - Un objet CRGB correspondant à la couleur donnée. Si le canal alpha est égal à 0, la fonction retourne CRGB::Black (noir éteint)
+*/
+CRGB CRGBToCRGB(uint32_t c) {
+  uint8_t a = (c >> 24) & 0xFF;
+  if (a == 0) return CRGB::Black;
+
+  uint8_t r = (c >> 16) & 0xFF;
+  uint8_t g = (c >>  8) & 0xFF;
+  uint8_t b = (c >>  0) & 0xFF;
+
+  return CRGB(r, g, b);
+}
+
+/*
+Brief : Cette fonction convertit une couleur au format 0xAARRBBGG en un objet CRGB de FastLED.
+Paramètre : 
+  - c - la couleur au format 0xAARRBBGG (Alpha, Rouge, Bleu, Vert)
+
+Retour : 
+  - Un objet CRGB correspondant à la couleur donnée. Si le canal alpha est égal à 0, la fonction retourne CRGB::Black (noir éteint)
+*/
+CRGB CRBGToCRGB(uint32_t c) {
+  uint8_t a = (c >> 24) & 0xFF;
+  if (a == 0) return CRGB::Black;
+
+  uint8_t r = (c >> 16) & 0xFF;   // Rouge (0xAARRBBGG)
+  uint8_t b = (c >>  8) & 0xFF;   // Bleu
+  uint8_t g = (c >>  0) & 0xFF;   // Vert
+
+  return CRGB(r, g, b);           // On remet dans l'ordre R-G-B pour FastLED
+}
+
+/*
+Brief : Cette fonction convertit une couleur au format 0xAAGGRRBB en un objet CRGB de FastLED.
+Paramètre : 
+  - c - la couleur au format 0xAAGGRRBB (Alpha, Vert, Rouge, Bleu)
+
+Retour : 
+  - Un objet CRGB correspondant à la couleur donnée. Si le canal alpha est égal à 0, la fonction retourne CRGB::Black (noir éteint)
+*/
+CRGB CGRBToCRGB(uint32_t c) {
+  uint8_t a = (c >> 24) & 0xFF;
+  if (a == 0) return CRGB::Black;
+
+  uint8_t g = (c >> 16) & 0xFF;   // Vert (0xAAGGRRBB)
+  uint8_t r = (c >>  8) & 0xFF;   // Rouge 
+  uint8_t b = (c >>  0) & 0xFF;   // Bleu
+
+  return CRGB(r, g, b);           // On remet dans l'ordre R-G-B pour FastLED
+}
+
+/*
+Brief : Cette fonction convertit une couleur au format 0xAABBRRGG en un objet CRGB de FastLED.
+Paramètre : 
+  - c - la couleur au format 0xAABBRRGG (Alpha, Bleu, Rouge, Vert)
+
+Retour : 
+  - Un objet CRGB correspondant à la couleur donnée. Si le canal alpha est égal à 0, la fonction retourne CRGB::Black (noir éteint)
+*/
+CRGB CBRGToCRGB(uint32_t c) {
+  uint8_t a = (c >> 24) & 0xFF;
+  if (a == 0) return CRGB::Black;
+
+  uint8_t b = (c >> 16) & 0xFF;   // Bleu (0xAABBRRGG)
+  uint8_t r = (c >>  8) & 0xFF;   // Rouge 
+  uint8_t g = (c >>  0) & 0xFF;   // Vert
+
+  return CRGB(r, g, b);           // On remet dans l'ordre R-G-B pour FastLED
+}
+
+/*
+Brief : Cette fonction convertit une couleur au format 0xAABBGGRR en un objet CRGB de FastLED.
+Paramètre : 
+  - c - la couleur au format 0xAABBGGRR (Alpha, Bleu, Vert, Rouge)
+
+Retour :
+  - Un objet CRGB correspondant à la couleur donnée. Si le canal alpha est égal à 0, la fonction retourne CRGB::Black (noir éteint)
+*/
+CRGB CBGRToCRGB(uint32_t c) {
+  uint8_t a = (c >> 24) & 0xFF;
+  if (a == 0) return CRGB::Black;
+
+  uint8_t b = (c >> 16) & 0xFF;   // Bleu (0xAABBGGRR)
+  uint8_t g = (c >>  8) & 0xFF;   // Vert 
+  uint8_t r = (c >>  0) & 0xFF;   // Rouge
+
+  return CRGB(r, g, b);           // On remet dans l'ordre R-G-B pour FastLED
+}
+
+/*
+Brief : Cette fonction convertit une couleur au format 0xAAGGBBRR en un objet CRGB de FastLED.
+Paramètre : 
+  - c - la couleur au format 0xAAGGBBRR (Alpha, Vert, Bleu, Rouge)
+
+Retour : 
+  - Un objet CRGB correspondant à la couleur donnée. Si le canal alpha est égal à 0, la fonction retourne CRGB::Black (noir éteint)
+*/
+CRGB CGBRToCRGB(uint32_t c) {
+  uint8_t a = (c >> 24) & 0xFF;
+  if (a == 0) return CRGB::Black;
+
+  uint8_t g = (c >> 16) & 0xFF;   // Vert (0xAAGGBBRR)
+  uint8_t b = (c >>  8) & 0xFF;   // Bleu 
+  uint8_t r = (c >>  0) & 0xFF;   // Rouge
+
+  return CRGB(r, g, b);           // On remet dans l'ordre R-G-B pour FastLED
+}
+
+// Mapping serpentin par colonnes (validé sur votre matrice)
+/*
+Brief : Cette fonction calcule l'index dans le tableau de LEDs à partir des coordonnées x et y sur la matrice, en tenant compte du mapping en serpentin par colonnes.
+Paramètre : 
+  - x : la coordonnée x (colonne) sur la matrice (0 à WIDTH-1)
+  - y : la coordonnée y (ligne) sur la matrice (0 à HEIGHT-1)
+Retour :
+  - L'index dans le tableau de LEDs correspondant à la position (x, y)
+*/
+uint16_t getXYIndex(uint8_t x, uint8_t y) {
+  if (x >= WIDTH || y >= HEIGHT) return 0;
+  if ((x & 1) == 0) return x * HEIGHT + y;        // colonnes paires : haut → bas
+  return x * HEIGHT + (HEIGHT - 1 - y);           // colonnes impaires : bas → haut
+}
+
+// Affiche une frame (suppose ordre row-major dans new_piskel_data)
+void drawFrame(CRGB *leds, const uint32_t *frameData) {
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    for (uint8_t x = 0; x < WIDTH; x++) {
+      uint16_t srcIdx = (uint16_t)y * WIDTH + x;
+      uint16_t dstIdx = getXYIndex(x, y);
+      leds[dstIdx] = CBGRToCRGB(frameData[srcIdx]);
+    }
+  }
+}
+
+void drawChar(CRGB *leds, int16_t xPos, int16_t yPos, char c, CRGB color) {
+  if (c < 32 || c > 127) return;
+  uint8_t charIndex = c - 32;
+
+  for (uint8_t col = 0; col < 5; col++) {  // col = colonne de 0 (gauche) à 4 (droite)
+    uint8_t columnData = pgm_read_byte(&Font5x7[charIndex * 5 + col]);
+
+    for (uint8_t row = 0; row < 8; row++) {  // row = ligne de haut (0) à bas (7)
+      if (columnData & (1 << row)) {         // bit 0 = haut, bit 7 = bas (inverse si besoin)
+        int16_t screenX = xPos + col;
+        int16_t screenY = yPos + row;
+        if (screenX >= 0 && screenX < WIDTH && screenY >= 0 && screenY < HEIGHT) {
+          leds[getXYIndex(screenX, screenY)] = color;
+        }
+      }
+    }
+  }
+}
