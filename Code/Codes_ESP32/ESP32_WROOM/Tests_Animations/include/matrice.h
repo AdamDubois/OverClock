@@ -16,4 +16,6 @@ void drawFrame(CRGB *leds, const uint32_t *frameData);
 
 void drawChar(CRGB *leds, int16_t xPos, int16_t yPos, char c, CRGB color);
 
+bool drawText(CRGB *leds, const char* text, CRGB color, int &scrollX);
+
 #endif

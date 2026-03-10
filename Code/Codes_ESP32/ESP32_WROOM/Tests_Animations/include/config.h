@@ -51,6 +51,8 @@
 #define DATA_PIN     9   // Pin de données pour la bande de LEDs
 #define WIDTH        32  // Largeur de la matrice de LEDs
 #define HEIGHT       8   // Hauteur de la matrice de LEDs
+// #define WIDTH        (5 * 60) // Strip de 5m avec 60 LEDs/m
+// #define HEIGHT       1         // Strip 1D
 #define NUM_LEDS     (WIDTH * HEIGHT) // Nombre total de LEDs dans la matrice
 
 
