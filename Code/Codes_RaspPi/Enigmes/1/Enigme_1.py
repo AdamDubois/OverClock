@@ -121,6 +121,15 @@ try:
             if switch_values == valeur_sequence_attendue:
                 print("Séquence correcte !")
 
+                message = str(num_sequence + 2)
+                data = [ord(c) for c in message]
+                try:
+                    i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+                    bus.i2c_rdwr(i2c_msg_write)
+                    print("Message envoyé:", message)
+                except Exception as e:
+                    print("Erreur d'écriture I2C:", e)
+
                 for i in range(4):
                     if i == SEQUENCE_ATTENDUE[num_sequence]:
                         valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
@@ -129,8 +138,19 @@ try:
 
                 print("Nouvelle séquence attendu :", valeur_sequence_attendue)
 
-            else:
+            elif num_sequence != 0:
                 print("Mauvaise séquence, recommencez depuis le début.")
+                message = str(0)
+                data = [ord(c) for c in message]
+                try:
+                    i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+                    bus.i2c_rdwr(i2c_msg_write)
+                    print("Message envoyé:", message)
+                except Exception as e:
+                    print("Erreur d'écriture I2C:", e)
+
+                time.sleep(1 * 5)
+
                 num_sequence = 0
                 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
                 last_switch_values = [None] * 4
