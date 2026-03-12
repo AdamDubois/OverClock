@@ -25,24 +25,26 @@ num_sequence = 0
 
 
 def test_sequence(valeur_sequence_attendue=VALEUR_SWITCHES_INIT.copy()):
-    print("Séquence attendue : 0", valeur_sequence_attendue)
+    #print("Séquence attendue : 0", valeur_sequence_attendue)
 
     for sequence, valeur in enumerate(SEQUENCE_ATTENDUE):
         for i in range(4):
             if i == valeur:
                 valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
                 sequence += 1
-                print("Séquence attendue :", sequence, valeur_sequence_attendue)
+                #print("Séquence attendue :", sequence, valeur_sequence_attendue)
                 break # Passe à la prochaine valeur de la séquence attendue après avoir trouvé le switch à toggler
 
     if valeur_sequence_attendue == VALEUR_SWITCH_FIN:
-        print("Séquence finale correcte !")
+        #print("Séquence finale correcte !")
         valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
         return
 
     else:
-        print("Séquence finale incorrecte.")
+        #print("Séquence finale incorrecte.")
         quit()
+
+
 
 def getI2C():
     try:
@@ -56,12 +58,13 @@ def getI2C():
                 break
             strReceived += chr(value)
         # Convertir la liste d'octets en chaîne
-        print("Réponse reçue:", strReceived)
+        #print("Réponse reçue:", strReceived)
 
         return strReceived
     
     except Exception as e:
-        print("Erreur de lecture I2C:", e)
+        pass
+        #print("Erreur de lecture I2C:", e)
 
 def decodeJSON(json_str):
     """
@@ -75,29 +78,29 @@ def decodeJSON(json_str):
         import re
         # Ajoute des guillemets autour des clés non entourées
         json_str_corrige = re.sub(r'([a-zA-Z0-9_]+):', r'"\1":', json_str)
-        print("JSON corrigé pour décodage:", json_str_corrige)
+        #print("JSON corrigé pour décodage:", json_str_corrige)
         data = json.loads(json_str_corrige)
         # Extraire les valeurs des switchs
         for key, value in data.items():
             if key.startswith('N') and value != "IO":
-                print("Le message n'est pas au format attendu (N doit être 'IO').")
+                #print("Le message n'est pas au format attendu (N doit être 'IO').")
                 return None
             elif key.startswith('SW'):
                 index = int(key[2:])  # Extraire l'index du switch (ex: SW3 -> 3)
                 if value == 1:
-                    print(f"Switch {index} est ON")
+                    #print(f"Switch {index} est ON")
                     switch_values[index] = True
                 elif value == 0:
-                    print(f"Switch {index} est OFF")
+                    #print(f"Switch {index} est OFF")
                     switch_values[index] = False
                 else:
-                    print(f"Valeur inattendue pour {key}: {value}")
+                    #print(f"Valeur inattendue pour {key}: {value}")
                     return None
     except Exception as e:
-        print("Erreur lors du décodage JSON:", e)
+        #print("Erreur lors du décodage JSON:", e)
         error = True
     finally:
-        print("Décodage terminé.")
+        #print("Décodage terminé.")
         if not error:
             return switch_values
 
@@ -107,16 +110,16 @@ try:
     while True:
         getI2C()
         switch_values = decodeJSON(getI2C())
-        print(switch_values, last_switch_values)
+        #print(switch_values, last_switch_values)
         if switch_values == last_switch_values:
             print("Aucune modification des switchs détectée.")
         else:
             print("Modification des switchs détectée :", switch_values)
+            print("Sequence attendu :", valeur_sequence_attendue)
             last_switch_values = switch_values.copy()
 
             if switch_values == valeur_sequence_attendue:
                 print("Séquence correcte !")
-                num_sequence += 1
 
                 for i in range(4):
                     if i == SEQUENCE_ATTENDUE[num_sequence]:
@@ -124,10 +127,13 @@ try:
                         num_sequence += 1
                         break
 
+                print("Nouvelle séquence attendu :", valeur_sequence_attendue)
+
             else:
                 print("Mauvaise séquence, recommencez depuis le début.")
                 num_sequence = 0
                 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
+                last_switch_values = [None] * 4
 
 
         time.sleep(1)
