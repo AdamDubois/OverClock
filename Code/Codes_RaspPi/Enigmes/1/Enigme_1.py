@@ -94,8 +94,8 @@ def decodeJSON(json_str):
                     #print(f"Switch {index} est OFF")
                     switch_values[index] = False
                 else:
-                    #print(f"Valeur inattendue pour {key}: {value}")
-                    return None
+                    print(f"Valeur inattendue pour {key}: {value}")
+                    quit()
     except Exception as e:
         #print("Erreur lors du décodage JSON:", e)
         error = True
@@ -107,13 +107,20 @@ def decodeJSON(json_str):
 try:
     test_sequence()
 
+    message = str(0)
+    data = [ord(c) for c in message]
+    try:
+        i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+        bus.i2c_rdwr(i2c_msg_write)
+        print("Message envoyé:", message)
+    except Exception as e:
+        print("Erreur d'écriture I2C:", e)
+
     while True:
         getI2C()
         switch_values = decodeJSON(getI2C())
         #print(switch_values, last_switch_values)
-        if switch_values == last_switch_values:
-            print("Aucune modification des switchs détectée.")
-        else:
+        if switch_values != last_switch_values:
             print("Modification des switchs détectée :", switch_values)
             print("Sequence attendu :", valeur_sequence_attendue)
             last_switch_values = switch_values.copy()
@@ -121,7 +128,19 @@ try:
             if switch_values == valeur_sequence_attendue:
                 print("Séquence correcte !")
 
-                message = str(num_sequence + 2)
+                if num_sequence >= len(SEQUENCE_ATTENDUE):
+                    print("Séquence finale atteinte, félicitations !")
+                    message = str(2)
+                    data = [ord(c) for c in message]
+                    try:
+                        i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+                        bus.i2c_rdwr(i2c_msg_write)
+                        print("Message envoyé:", message)
+                    except Exception as e:
+                        print("Erreur d'écriture I2C:", e)
+                    break
+
+                message = str(num_sequence + 3)
                 data = [ord(c) for c in message]
                 try:
                     i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
@@ -140,7 +159,7 @@ try:
 
             elif num_sequence != 0:
                 print("Mauvaise séquence, recommencez depuis le début.")
-                message = str(0)
+                message = str(1)
                 data = [ord(c) for c in message]
                 try:
                     i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
@@ -153,10 +172,10 @@ try:
 
                 num_sequence = 0
                 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
-                last_switch_values = [None] * 4
+                last_switch_values = [False] * 4
 
 
-        time.sleep(1)
+        time.sleep(0.01)
         
 
 except KeyboardInterrupt:
