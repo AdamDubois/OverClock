@@ -2,13 +2,13 @@ from smbus2 import SMBus, i2c_msg      # Pour l'I2C (sudo pip install smbus2)
 import time
 import json
 
-VALEUR_SWITCHES_INIT = [1, 1, 1, 0]
+VALEUR_SWITCHES_INIT = [True, True, True, False]
 
-SEQUENCE_ATTENDUE = [1, 2, 1, 4, 4, 3, 1, 2]
+SEQUENCE_ATTENDUE = [0, 1, 0, 2, 2, 3, 0, 1]
 
 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()
 
-VALEUR_SWITCH_FIN = [0, 1, 1, 1]
+VALEUR_SWITCH_FIN = [False, True, False, True]
 
 
 ADDR_ESPIO = 0x10
@@ -21,17 +21,23 @@ switch_values = []
 
 num_sequence = 0
 
-for i in range(len(SEQUENCE_ATTENDUE)):
-    if i == SEQUENCE_ATTENDUE[num_sequence] - 1:
-        valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
-        num_sequence += 1
+print("Séquence attendue:", num_sequence, valeur_sequence_attendue)
 
-print("Séquence attendue:", valeur_sequence_attendue)
+def test_sequence():
+    for num_sequence, valeur in enumerate(SEQUENCE_ATTENDUE):
+        for i in range(4):
+            if i == valeur:
+                valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
+                num_sequence += 1
+                print("Séquence attendue:", num_sequence, valeur_sequence_attendue)
+                break # Passe à la prochaine valeur de la séquence attendue après avoir trouvé le switch à toggler
 
-def exit_program():
-    bus.close()
-    print("Programme terminé.")
-    quit()
+    if valeur_sequence_attendue == VALEUR_SWITCH_FIN:
+        print("Séquence finale correcte !")
+
+    else:
+        print("Séquence finale incorrecte.")
+        quit()
 
 def getI2C():
     try:
@@ -90,6 +96,8 @@ def decodeJSON(json_str):
             return switch_values
 
 try:
+    test_sequence()
+    quit()
     if getI2C() is not None:
         switch_values = decodeJSON(getI2C())
         print("Valeurs des switchs:", switch_values)
@@ -99,7 +107,7 @@ try:
                     print("Séquence initiale correcte !")
                 else:
                     print("Séquence initiale incorrecte.")
-                    exit_program()
+                    quit()
     while True:
         getI2C()
         switch_values = decodeJSON(getI2C())
@@ -109,4 +117,6 @@ except KeyboardInterrupt:
     print("\nFin du programme !")
 
 finally:
-    exit_program()
+    print("Fermeture du bus I2C.")
+    bus.close()
+    print("Programme terminé.")
