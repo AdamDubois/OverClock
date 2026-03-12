@@ -2,13 +2,13 @@ from smbus2 import SMBus, i2c_msg      # Pour l'I2C (sudo pip install smbus2)
 import time
 import json
 
-VALEUR_SWITCHES_INIT = [0, 0, 0, 1]
+VALEUR_SWITCHES_INIT = [1, 1, 1, 0]
 
 SEQUENCE_ATTENDUE = [1, 2, 1, 4, 4, 3, 1, 2]
 
 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()
 
-VALEUR_SWITCH_FIN = [1, 0, 1, 1]
+VALEUR_SWITCH_FIN = [0, 1, 1, 1]
 
 
 ADDR_ESPIO = 0x10
@@ -20,6 +20,13 @@ bus = SMBus(I2C_BUS)
 switch_values = []
 
 num_sequence = 0
+
+for i in range(len(SEQUENCE_ATTENDUE)):
+    if i == SEQUENCE_ATTENDUE[num_sequence] - 1:
+        valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
+        num_sequence += 1
+
+print("Séquence attendue:", valeur_sequence_attendue)
 
 def exit_program():
     bus.close()
