@@ -83,7 +83,7 @@ def decodeJSON(json_str):
         # Extraire les valeurs des switchs
         for key, value in data.items():
             if key.startswith('N') and value != "IO":
-                print("Le message n'est pas au format attendu (N doit être 'IO').")
+                #print("Le message n'est pas au format attendu (N doit être 'IO').")
                 return None
             elif key.startswith('SW'):
                 index = int(key[2:])  # Extraire l'index du switch (ex: SW3 -> 3)
@@ -95,7 +95,7 @@ def decodeJSON(json_str):
                     switch_values[index] = False
                 else:
                     print(f"Valeur inattendue pour {key}: {value}")
-                    return None
+                    quit()
     except Exception as e:
         #print("Erreur lors du décodage JSON:", e)
         error = True
@@ -118,11 +118,8 @@ try:
 
     while True:
         getI2C()
-        switch_values_temp = decodeJSON(getI2C())
-
-        if switch_values_temp is not None:
-            switch_values = switch_values_temp
-
+        switch_values = decodeJSON(getI2C())
+        #print(switch_values, last_switch_values)
         if switch_values != last_switch_values:
             print("Modification des switchs détectée :", switch_values)
             print("Sequence attendu :", valeur_sequence_attendue)
