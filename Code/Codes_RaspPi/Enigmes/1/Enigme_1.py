@@ -2,9 +2,9 @@ from smbus2 import SMBus, i2c_msg      # Pour l'I2C (sudo pip install smbus2)
 import time
 import json
 
-VALEUR_SWITCHES_INIT = [True, True, True, True]
+VALEUR_SWITCHES_INIT = [True, True, False, True]
 
-VALEUR_SWITCH_FIN = [False, True, True, False]
+VALEUR_SWITCH_FIN = [False, True, False, False]
 
 SEQUENCE_ATTENDUE = [0, 1, 0, 2, 2, 3, 0, 1]
 
