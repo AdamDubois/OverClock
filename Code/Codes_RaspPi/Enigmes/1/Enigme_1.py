@@ -117,7 +117,6 @@ try:
         print("Erreur d'écriture I2C:", e)
 
     while True:
-        getI2C()
         switch_values_temp = decodeJSON(getI2C())
 
         if switch_values_temp is not None:
