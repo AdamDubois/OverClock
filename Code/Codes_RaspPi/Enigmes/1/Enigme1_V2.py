@@ -64,12 +64,12 @@ def getI2C():
                 break
             strReceived += chr(value)
         # Convertir la liste d'octets en chaîne
-        logger.debug(f"[getI2C] Données reçues : {strReceived}")
+        #logger.debug(f"[getI2C] Données reçues : {strReceived}")
 
         return strReceived
     
     except Exception as e:
-        logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
+        #logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
         return None
     
 
@@ -103,10 +103,10 @@ def decodeJSON(json_str):
             elif key.startswith('SW'):
                 index = int(key[2:])  # Extraire l'index du switch (ex: SW3 -> 3)
                 if value == 1:
-                    logger.debug(f"Switch {index} est True")
+                    #logger.debug(f"Switch {index} est True")
                     switch_values[index] = True
                 elif value == 0:
-                    logger.debug(f"Switch {index} est False")
+                    #logger.debug(f"Switch {index} est False")
                     switch_values[index] = False
                 else:
                     logger.warning(f"Valeur inattendue pour {key}: {value}")
@@ -173,9 +173,9 @@ def sequence_correcte(index_sequence):
     Fonction à appeler en cas de séquence correcte.
     Elle affiche un message de succès et peut être utilisée pour déclencher des animations de réussite sur les bandes LED.
     """
-    logger.info("Séquence correcte !")
-
+    logger.info("Séquence correcte ! Numéro de la séquence : " + str(index_sequence))
     message = str(MSG_LED_VERT[index_sequence]) # Message pour allumer la bonne DEL en vert en fonction de l'étape de la séquence
+    logger.debug(f"[sequence_correcte] Message à envoyer pour la séquence correcte : {message}")
     data = [ord(c) for c in message]
     try:
         i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
@@ -213,6 +213,12 @@ try:
     num_sequence = 0  # Numéro de la séquence actuelle
     switch_values_attendues = VALEUR_SWITCHES_INIT.copy()  # Valeurs des switchs attendues pour la séquence actuelle, initialisées à la valeur de départ
 
+    switch_values_temp = decodeJSON(getI2C())
+    if switch_values_temp is not None:
+        switch_values = switch_values_temp
+        if switch_values != VALEUR_SWITCHES_INIT:
+            last_switch_values = switch_values.copy() # Initialiser last_switch_values avec les valeurs actuelles des switchs pour éviter de détecter une modification dès le début si les switchs sont déjà
+
     while True:
         switch_values_temp = decodeJSON(getI2C())
 
@@ -227,26 +233,43 @@ try:
 
             if switch_values == valeur_sequence_attendue:
                 sequence_correcte(num_sequence)
-                num_sequence += 1
 
                 if num_sequence >= len(SEQUENCE_ATTENDUE):
                     terminer_enigme()
                     quit()
 
-            else:
+                else:
+                    logger.debug(f"DEBUG num sequence : {num_sequence}")
+                    for i in range(4):
+                        if i == SEQUENCE_ATTENDUE[num_sequence]:
+                            valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
+                            num_sequence += 1
+                            break
+
+                logger.debug(f"Nouvelle séquence attendu : {valeur_sequence_attendue}")
+
+            elif num_sequence > 0: # Si la séquence n'est pas correcte et que ce n'est pas la première étape de la séquence (num_sequence == 0), alors c'est que le joueur a fait une erreur dans la séquence, on affiche un message d'erreur et on réinitialise la séquence attendue pour recommencer depuis le début
                 mauvaise_sequence()
 
                 num_sequence = 0
                 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
 
-                if switch_values == VALEUR_SWITCHES_INIT:
-                    logger.debug("Les switchs sont à leur position de départ")
-                    last_switch_values = [False] * 4 # Réinitialiser. Si les valeurs des switchs actuelles sont celle de départ, on veut pouvoir les détecter comme une modification et afficher la séquence attendue, sinon on ne l'affiche pas et ça peut être confus pour les joueurs qui ne savent pas quelle est la séquence attendue au départ
+                switch_values_temp = decodeJSON(getI2C())
+                if switch_values_temp is not None:
+                    switch_values = switch_values_temp
+                    if switch_values != VALEUR_SWITCHES_INIT:
+                        last_switch_values = switch_values.copy() # Mettre à jour last_switch_values pour éviter de détecter une modification dès le début si les switchs sont déjà à la position de départ après une mauvaise séquence
+                    else:
+                        last_switch_values = [False] * 4 # Si on ne peut pas décoder les valeurs des switchs, on réinitialise last_switch_values pour éviter de détecter une modification dès le début
+        
         time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
 
 
 except Exception as e:
     logger.error(f"Erreur inattendue dans le programme principal: {e}")
+
+except KeyboardInterrupt:
+    logger.info("Programme interrompu par l'utilisateur.")
 
 finally:
     bus.close()
