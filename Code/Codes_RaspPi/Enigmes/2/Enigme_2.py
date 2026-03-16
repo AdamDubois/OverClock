@@ -12,6 +12,10 @@ ADDR_ESPNEO = 0x12  # Adresse I2C de l'ESPNEO
 couleurs_attendu = [[0,255,0],[0,255,0],[0,255,0],[0,255,0],[0,255,0]]
 couleurs_depart = [[255,0,255],[255,255,0],[255,255,255],[0,0,0],[0,255,255]]
 
+RED = [255, 0, 0]
+YELLOW = [255, 255, 0]
+BLUE = [0, 0, 255]
+
 
 
 def getI2C():
@@ -34,7 +38,7 @@ def getI2C():
                 break
             strReceived += chr(value)
         # Convertir la liste d'octets en chaîne
-        logger.debug(f"[getI2C] Données reçues : {strReceived}")
+        #logger.debug(f"[getI2C] Données reçues : {strReceived}")
 
         return strReceived
     
@@ -73,10 +77,10 @@ def decodeJSON(json_str):
             elif key.startswith('BTN'):
                 index = int(key[3:])  # Extraire l'index du bouton (ex: BTN3 -> 3)
                 if value == 1:
-                    logger.debug(f"Bouton {index} est False, bouton non appuyé")
+                    #logger.debug(f"Bouton {index} est False, bouton non appuyé")
                     button_values[index] = False
                 elif value == 0:
-                    logger.debug(f"Bouton {index} est True, bouton appuyé")
+                    #logger.debug(f"Bouton {index} est True, bouton appuyé")
                     button_values[index] = True
                 else:
                     logger.warning(f"Valeur inattendue pour {key}: {value}")
@@ -88,3 +92,31 @@ def decodeJSON(json_str):
     except Exception as e:
         logger.error(f"[decodeJSON] Erreur lors du décodage JSON: {e}")
         return None
+
+
+
+try:
+    compteur = 0
+
+    while True:
+        strReceived = getI2C()
+        if strReceived is not None:
+            switch_values_temp = decodeJSON(strReceived)
+            if switch_values_temp is not None:
+                #logger.debug(f"Valeurs des boutons décodées : {switch_values_temp}")
+                if switch_values_temp != [False, False, False, False, False]: 
+                    logger.info(f"Bouton appuyé ! {compteur}")
+                    compteur += 1
+            else:
+                #logger.debug("Impossible de décoder les valeurs des boutons à partir du message reçu.")
+                pass
+        else:
+            #logger.debug("Aucun message reçu via I2C.")
+            pass
+
+except Exception as e:
+    logger.error(f"Erreur dans la boucle principale: {e}")
+except KeyboardInterrupt:
+    print("\nFin du programme !")
+finally:
+    bus.close()

@@ -37,7 +37,7 @@ SEQUENCE_ATTENDUE = [0, 1, 0, 2, 2, 3, 0, 1]
 MSG_LED_TOUT_ROUGE = 0
 MSG_LED_ECHEC = 1
 MSG_LED_REUSSI = 2
-MSG_LED_VERT = [3, 4, 5, 6, 7, 8, 9, 10] # Pour allumer la première DEL en vert, puis les deux premières, etc. jusqu'à toutes les DELs en vert
+MSG_LED_VERT = [3, 4, 5, 6, 7, 8, 9, 10, 11] # Pour allumer la première DEL en vert, puis les deux premières, etc. jusqu'à toutes les DELs en vert
 
 
 

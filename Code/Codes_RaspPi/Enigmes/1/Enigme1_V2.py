@@ -173,9 +173,9 @@ def sequence_correcte(index_sequence):
     Fonction à appeler en cas de séquence correcte.
     Elle affiche un message de succès et peut être utilisée pour déclencher des animations de réussite sur les bandes LED.
     """
-    logger.info("Séquence correcte !")
-
+    logger.info("Séquence correcte ! Numéro de la séquence : " + str(index_sequence))
     message = str(MSG_LED_VERT[index_sequence]) # Message pour allumer la bonne DEL en vert en fonction de l'étape de la séquence
+    logger.debug(f"[sequence_correcte] Message à envoyer pour la séquence correcte : {message}")
     data = [ord(c) for c in message]
     try:
         i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
@@ -234,11 +234,12 @@ try:
             if switch_values == valeur_sequence_attendue:
                 sequence_correcte(num_sequence)
 
-                if num_sequence > len(SEQUENCE_ATTENDUE):
+                if num_sequence >= len(SEQUENCE_ATTENDUE):
                     terminer_enigme()
                     quit()
 
                 else:
+                    logger.debug(f"DEBUG num sequence : {num_sequence}")
                     for i in range(4):
                         if i == SEQUENCE_ATTENDUE[num_sequence]:
                             valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
@@ -247,7 +248,7 @@ try:
 
                 logger.debug(f"Nouvelle séquence attendu : {valeur_sequence_attendue}")
 
-            else:
+            elif num_sequence > 0: # Si la séquence n'est pas correcte et que ce n'est pas la première étape de la séquence (num_sequence == 0), alors c'est que le joueur a fait une erreur dans la séquence, on affiche un message d'erreur et on réinitialise la séquence attendue pour recommencer depuis le début
                 mauvaise_sequence()
 
                 num_sequence = 0

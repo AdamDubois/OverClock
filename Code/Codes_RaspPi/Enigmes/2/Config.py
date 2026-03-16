@@ -49,7 +49,7 @@ MSG_LED_VERT = [3, 4, 5, 6, 7, 8, 9, 10] # Pour allumer la première DEL en vert
 #---------------------------------------------------------------------------------------------------------------------------------------#
 
 # Debug mode configuration
-DEBUG_MODE = False  # Change to False to disable debug messages
+DEBUG_MODE = True  # Change to False to disable debug messages
 
 # I2C Configuration
 ADDR_ESPIO = 0x10
