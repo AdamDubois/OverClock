@@ -239,8 +239,6 @@ try:
                     quit()
 
                 else:
-                    num_sequence -= 1
-                    
                     for i in range(4):
                         if i == SEQUENCE_ATTENDUE[num_sequence]:
                             valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
@@ -249,20 +247,28 @@ try:
 
                 logger.debug(f"Nouvelle séquence attendu : {valeur_sequence_attendue}")
 
-            elif not premiere_valeur: # Si ce n'est pas la première modification des switchs, alors on affiche les DELs d'erreur, sinon on considère que c'est juste les joueurs qui mettent les switchs à la bonne position au lancement de l'énigme, ce qui peut être confus s'il y a les DELs d'erreur qui s'affichent dès le début
+            else:
                 mauvaise_sequence()
 
                 num_sequence = 0
                 valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
 
-                if switch_values == VALEUR_SWITCHES_INIT:
-                    logger.debug("Les switchs sont à leur position de départ")
-                    last_switch_values = [False] * 4 # Réinitialiser. Si les valeurs des switchs actuelles sont celle de départ, on veut pouvoir les détecter comme une modification et afficher la séquence attendue, sinon on ne l'affiche pas et ça peut être confus pour les joueurs qui ne savent pas quelle est la séquence attendue au départ
+                switch_values_temp = decodeJSON(getI2C())
+                if switch_values_temp is not None:
+                    switch_values = switch_values_temp
+                    if switch_values != VALEUR_SWITCHES_INIT:
+                        last_switch_values = switch_values.copy() # Mettre à jour last_switch_values pour éviter de détecter une modification dès le début si les switchs sont déjà à la position de départ après une mauvaise séquence
+                    else:
+                        last_switch_values = [False] * 4 # Si on ne peut pas décoder les valeurs des switchs, on réinitialise last_switch_values pour éviter de détecter une modification dès le début
+        
         time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
 
 
 except Exception as e:
     logger.error(f"Erreur inattendue dans le programme principal: {e}")
+
+except KeyboardInterrupt:
+    logger.info("Programme interrompu par l'utilisateur.")
 
 finally:
     bus.close()
