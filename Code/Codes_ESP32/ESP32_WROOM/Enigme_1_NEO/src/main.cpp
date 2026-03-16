@@ -10,7 +10,7 @@
 
 #define DATA_PIN     9   // Pin de données pour la bande de LEDs
 #define WIDTH        9  // Largeur de la matrice de LEDs
-#define HEIGHT       8   // Hauteur de la matrice de LEDs
+#define HEIGHT       1   // Hauteur de la matrice de LEDs
 #define NUM_LEDS     (WIDTH * HEIGHT) // Nombre total de LEDs dans la matrice
 #define BRIGHTNESS    50  // Luminosité des LEDs (0-255)
 
