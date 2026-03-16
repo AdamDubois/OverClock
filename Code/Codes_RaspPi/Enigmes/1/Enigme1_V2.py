@@ -64,12 +64,12 @@ def getI2C():
                 break
             strReceived += chr(value)
         # Convertir la liste d'octets en chaîne
-        logger.debug(f"[getI2C] Données reçues : {strReceived}")
+        #logger.debug(f"[getI2C] Données reçues : {strReceived}")
 
         return strReceived
     
     except Exception as e:
-        logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
+        #logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
         return None
     
 
@@ -103,10 +103,10 @@ def decodeJSON(json_str):
             elif key.startswith('SW'):
                 index = int(key[2:])  # Extraire l'index du switch (ex: SW3 -> 3)
                 if value == 1:
-                    logger.debug(f"Switch {index} est True")
+                    #logger.debug(f"Switch {index} est True")
                     switch_values[index] = True
                 elif value == 0:
-                    logger.debug(f"Switch {index} est False")
+                    #logger.debug(f"Switch {index} est False")
                     switch_values[index] = False
                 else:
                     logger.warning(f"Valeur inattendue pour {key}: {value}")
@@ -213,6 +213,12 @@ try:
     num_sequence = 0  # Numéro de la séquence actuelle
     switch_values_attendues = VALEUR_SWITCHES_INIT.copy()  # Valeurs des switchs attendues pour la séquence actuelle, initialisées à la valeur de départ
 
+    switch_values_temp = decodeJSON(getI2C())
+    if switch_values_temp is not None:
+        switch_values = switch_values_temp
+        if switch_values != VALEUR_SWITCHES_INIT:
+            last_switch_values = switch_values.copy() # Initialiser last_switch_values avec les valeurs actuelles des switchs pour éviter de détecter une modification dès le début si les switchs sont déjà
+
     while True:
         switch_values_temp = decodeJSON(getI2C())
 
@@ -227,13 +233,23 @@ try:
 
             if switch_values == valeur_sequence_attendue:
                 sequence_correcte(num_sequence)
-                num_sequence += 1
 
-                if num_sequence >= len(SEQUENCE_ATTENDUE):
+                if num_sequence > len(SEQUENCE_ATTENDUE):
                     terminer_enigme()
                     quit()
 
-            else:
+                else:
+                    num_sequence -= 1
+                    
+                    for i in range(4):
+                        if i == SEQUENCE_ATTENDUE[num_sequence]:
+                            valeur_sequence_attendue[i] = not valeur_sequence_attendue[i]
+                            num_sequence += 1
+                            break
+
+                logger.debug(f"Nouvelle séquence attendu : {valeur_sequence_attendue}")
+
+            elif not premiere_valeur: # Si ce n'est pas la première modification des switchs, alors on affiche les DELs d'erreur, sinon on considère que c'est juste les joueurs qui mettent les switchs à la bonne position au lancement de l'énigme, ce qui peut être confus s'il y a les DELs d'erreur qui s'affichent dès le début
                 mauvaise_sequence()
 
                 num_sequence = 0
