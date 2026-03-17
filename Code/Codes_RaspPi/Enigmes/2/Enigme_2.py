@@ -104,6 +104,20 @@ try:
     selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
     couleurs_strip = couleurs_depart.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
 
+    message = "{" + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
+    logger.debug(f"[lancer_enigme] Message initial à envoyer via I2C : {message}")
+    data = [ord(c) for c in message]
+    logger.debug(f"[lancer_enigme] Données à envoyer via I2C (en octets) : {data}")
+
+    try:
+        i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+        bus.i2c_rdwr(i2c_msg_write)
+        logger.debug(f"[lancer_enigme] Message envoyé via I2C : {message}")
+
+    except Exception as e:
+        logger.error(f"[lancer_enigme] Erreur lors de l'écriture I2C: {e}")
+        quit()
+
     while True:
         strReceived = getI2C()
 
@@ -171,6 +185,18 @@ try:
                 else:
                     couleurs_strip[selection_strip][2] = 255
                     logger.debug(f"Le strip {selection_strip} a maintenant du bleu.")
+
+            message = "{" + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
+            data = [ord(c) for c in message]
+
+            try:
+                i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+                bus.i2c_rdwr(i2c_msg_write)
+                logger.debug(f"[lancer_enigme] Message envoyé via I2C : {message}")
+
+            except Exception as e:
+                logger.error(f"[lancer_enigme] Erreur lors de l'écriture I2C: {e}")
+                quit()
 
 
 
