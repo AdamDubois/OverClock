@@ -44,6 +44,7 @@ def getI2C():
     
     except Exception as e:
         logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
+        time.sleep(1)  # Petite pause pour éviter de surcharger le bus en cas d'erreur répétée
         return None
     
 
@@ -105,6 +106,7 @@ try:
 
     while True:
         strReceived = getI2C()
+
         if strReceived is not None:
             button_values_temp = decodeJSON(strReceived)
             if button_values_temp is not None:
