@@ -183,7 +183,8 @@ try:
                     logger.debug("Bouton Bleu appuyé")
 
                     if couleurs_strip[selection_strip][2] == 255:
-                        logger.debug(f"Le strip {selection_strip} a déjà du bleu, aucune action nécessaire.")
+                        couleurs_strip[selection_strip][2] = 0
+                        logger.debug(f"Le strip {selection_strip} n'a plus de bleu.")
                     else:
                         couleurs_strip[selection_strip][2] = 255
                         logger.debug(f"Le strip {selection_strip} a maintenant du bleu.")
