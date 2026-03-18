@@ -56,6 +56,10 @@ if __name__ == "__main__":
                 print("Aucune donnée reçue via I2C.")
             t1 = time.perf_counter()
             duree = t1 - t0
+
+            if btn.get("BTN0", 0) == 0:
+                print("BTN0 est pressé.")
+
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
             # Enregistrement dans le CSV
             try:
