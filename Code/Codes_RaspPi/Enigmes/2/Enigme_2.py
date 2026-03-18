@@ -44,6 +44,7 @@ def getI2C():
     
     except Exception as e:
         logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
+        time.sleep(1)  # Petite pause pour éviter de surcharger le bus en cas d'erreur répétée
         return None
     
 
@@ -103,8 +104,23 @@ try:
     selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
     couleurs_strip = couleurs_depart.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
 
+    message = "{" + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
+    logger.debug(f"[lancer_enigme] Message initial à envoyer via I2C : {message}")
+    data = [ord(c) for c in message]
+    logger.debug(f"[lancer_enigme] Données à envoyer via I2C (en octets) : {data}")
+
+    try:
+        i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+        bus.i2c_rdwr(i2c_msg_write)
+        logger.debug(f"[lancer_enigme] Message envoyé via I2C : {message}")
+
+    except Exception as e:
+        logger.error(f"[lancer_enigme] Erreur lors de l'écriture I2C: {e}")
+        quit()
+
     while True:
         strReceived = getI2C()
+
         if strReceived is not None:
             button_values_temp = decodeJSON(strReceived)
             if button_values_temp is not None:
@@ -114,61 +130,76 @@ try:
             logger.debug(f"Changement détecté dans les valeurs des boutons: {button_values}")
             last_button_values = button_values.copy()
 
-            if button_values[0] is True:
-                logger.debug("Bouton Noir appuyé")
+            if button_values != [False] * 5:
 
-                if selection_strip == 0:
-                    selection_strip = 4
-                else:
-                    selection_strip -= 1
+                if button_values[0] is True:
+                    logger.debug("Bouton Noir appuyé")
 
-                logger.debug(f"Strip sélectionné: {selection_strip}")
+                    if selection_strip == 0:
+                        selection_strip = 4
+                    else:
+                        selection_strip -= 1
 
-            if button_values[1] is True:
-                logger.debug("Bouton Blanc appuyé")
+                    logger.debug(f"Strip sélectionné: {selection_strip}")
 
-                if selection_strip == 4:
-                    selection_strip = 0
-                else:
-                    selection_strip += 1
+                if button_values[1] is True:
+                    logger.debug("Bouton Blanc appuyé")
 
-                logger.debug(f"Strip sélectionné: {selection_strip}")
+                    if selection_strip == 4:
+                        selection_strip = 0
+                    else:
+                        selection_strip += 1
 
-            if button_values[2] is True:
-                logger.debug("Bouton Rouge appuyé")
+                    logger.debug(f"Strip sélectionné: {selection_strip}")
 
-                if couleurs_strip[selection_strip][0] == 255:
-                    couleurs_strip[selection_strip][0] = 0
-                    logger.debug(f"Le strip {selection_strip} n'a plus de rouge.")
-                else:
-                    couleurs_strip[selection_strip][0] = 255
-                    logger.debug(f"Le strip {selection_strip} a maintenant du rouge.")
+                if button_values[2] is True:
+                    logger.debug("Bouton Rouge appuyé")
 
-            if button_values[3] is True:
-                logger.debug("Bouton Jaune appuyé")
+                    if couleurs_strip[selection_strip][0] == 255:
+                        couleurs_strip[selection_strip][0] = 0
+                        logger.debug(f"Le strip {selection_strip} n'a plus de rouge.")
+                    else:
+                        couleurs_strip[selection_strip][0] = 255
+                        logger.debug(f"Le strip {selection_strip} a maintenant du rouge.")
 
-                if couleurs_strip[selection_strip][0] == 255:
-                    couleurs_strip[selection_strip][0] = 0
-                    logger.debug(f"Le strip {selection_strip} n'a plus de rouge.")
-                else:
-                    couleurs_strip[selection_strip][0] = 255
-                    logger.debug(f"Le strip {selection_strip} a maintenant du rouge.")
+                if button_values[3] is True:
+                    logger.debug("Bouton Jaune appuyé")
 
-                if couleurs_strip[selection_strip][1] == 255:
-                    couleurs_strip[selection_strip][1] = 0
-                    logger.debug(f"Le strip {selection_strip} n'a plus de vert.")
-                else:
-                    couleurs_strip[selection_strip][1] = 255
-                    logger.debug(f"Le strip {selection_strip} a maintenant du vert.")
+                    if couleurs_strip[selection_strip][0] == 255:
+                        couleurs_strip[selection_strip][0] = 0
+                        logger.debug(f"Le strip {selection_strip} n'a plus de rouge.")
+                    else:
+                        couleurs_strip[selection_strip][0] = 255
+                        logger.debug(f"Le strip {selection_strip} a maintenant du rouge.")
 
-            if button_values[4] is True:
-                logger.debug("Bouton Bleu appuyé")
+                    if couleurs_strip[selection_strip][1] == 255:
+                        couleurs_strip[selection_strip][1] = 0
+                        logger.debug(f"Le strip {selection_strip} n'a plus de vert.")
+                    else:
+                        couleurs_strip[selection_strip][1] = 255
+                        logger.debug(f"Le strip {selection_strip} a maintenant du vert.")
 
-                if couleurs_strip[selection_strip][2] == 255:
-                    logger.debug(f"Le strip {selection_strip} a déjà du bleu, aucune action nécessaire.")
-                else:
-                    couleurs_strip[selection_strip][2] = 255
-                    logger.debug(f"Le strip {selection_strip} a maintenant du bleu.")
+                if button_values[4] is True:
+                    logger.debug("Bouton Bleu appuyé")
+
+                    if couleurs_strip[selection_strip][2] == 255:
+                        couleurs_strip[selection_strip][2] = 0
+                        logger.debug(f"Le strip {selection_strip} n'a plus de bleu.")
+                    else:
+                        couleurs_strip[selection_strip][2] = 255
+                        logger.debug(f"Le strip {selection_strip} a maintenant du bleu.")
+
+                message = "{" + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
+                data = [ord(c) for c in message]
+
+                try:
+                    i2c_msg_write = i2c_msg.write(ADDR_ESPNEO, data)
+                    bus.i2c_rdwr(i2c_msg_write)
+                    logger.debug(f"[lancer_enigme] Message envoyé via I2C : {message}")
+
+                except Exception as e:
+                    logger.error(f"[lancer_enigme] Erreur lors de l'écriture I2C: {e}")
+                    quit()
 
 
 
