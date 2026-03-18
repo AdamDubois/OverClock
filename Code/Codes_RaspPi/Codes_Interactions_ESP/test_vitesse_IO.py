@@ -23,15 +23,6 @@ def getI2C(bus):
 
 if __name__ == "__main__":
     bus = SMBus(1)
-    csv_filename = "temps_mesures_v2.csv"
-    # Création du fichier CSV et écriture de l'en-tête si le fichier n'existe pas
-    try:
-        with open(csv_filename, mode="a", newline="") as csvfile:
-            writer = csv.writer(csvfile)
-            if csvfile.tell() == 0:
-                writer.writerow(["timestamp", "duree_s"])
-    except Exception as e:
-        print(f"Erreur lors de la création du fichier CSV: {e}")
 
     try:
         print("Appuyez sur Ctrl+C pour arrêter la boucle.")
@@ -39,7 +30,7 @@ if __name__ == "__main__":
             t0 = time.perf_counter()
             strReceived = getI2C(bus)
             if strReceived is not None:
-                print(f"\nRéponse I2C brute : {strReceived}")
+                #print(f"\nRéponse I2C brute : {strReceived}")
                 # Correction JSON et parsing
                 json_str_corrige = re.sub(r'([a-zA-Z0-9_]+):', r'"\1":', strReceived)
                 try:
@@ -47,9 +38,9 @@ if __name__ == "__main__":
                     sw = {k: v for k, v in data.items() if k.startswith('SW')}
                     btn = {k: v for k, v in data.items() if k.startswith('BTN')}
                     bana = {k: v for k, v in data.items() if k.startswith('BANA')}
-                    print(f"SW: {sw}")
-                    print(f"BTN: {btn}")
-                    print(f"BANA: {bana}")
+                    #print(f"SW: {sw}")
+                    #print(f"BTN: {btn}")
+                    #print(f"BANA: {bana}")
                 except Exception as e:
                     print(f"Erreur parsing JSON: {e}")
             else:
@@ -61,15 +52,9 @@ if __name__ == "__main__":
                 print("BTN0 est pressé.")
 
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            # Enregistrement dans le CSV
-            try:
-                with open(csv_filename, mode="a", newline="") as csvfile:
-                    writer = csv.writer(csvfile)
-                    writer.writerow([timestamp, f"{duree:.6f}"])
-            except Exception as e:
-                print(f"Erreur lors de l'écriture dans le CSV: {e}")
+
             print(f"Durée totale (lecture + parsing + extraction): {duree:.6f} secondes")
-            time.sleep(1)  # Petite pause pour éviter de spammer le bus
+            #time.sleep(0.1)  # Petite pause pour éviter de spammer le bus
     except KeyboardInterrupt:
         print("\nArrêt de la boucle.")
     finally:
