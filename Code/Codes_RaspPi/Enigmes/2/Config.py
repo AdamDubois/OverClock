@@ -19,10 +19,11 @@ __status__ = "Production"
 # Si la switch est en CC (Connected), sa valeur est un False (0 logique), car la broche est connectée à la masse (GND)
 # L'ordre des switchs peut changer, si elles sont connectées dans un ordre différent sur le MCP23S17 du ESP des IO.
 # Voici les switchs et leur numéro d'index normalement actuel :
-# Index 0 (SW0) : L'interrupteur à levier (NC quand il est en position Initiale et CC quand il est togglé)
-# Index 1 (SW1) : Le boîtier avec les boutons "Start" et "Stop" (NC quand il est en position Initiale (Stop) et CC quand il est togglé (Start))
-# Index 2 (SW2) : Le connecteur, branché/débranché (CC quand il est en position Initiale (branché) et NC quand il est débranché)
-# Index 3 (SW3) : L'interrupteur à tourner (NC quand il est en position Initiale et CC quand il est togglé)
+# Index 0 (BTN0) : Bouton Noir
+# Index 1 (BTN1) : Bouton Blanc
+# Index 2 (BTN2) : Bouton Rouge
+# Index 3 (BTN3) : Bouton Jaune
+# Index 4 (BTN4) : Bouton Bleu
 
 # Valeur de départ pour les switchs [SW0, SW1, SW2, SW3]
 VALEUR_SWITCHES_INIT = [True, True, False, True]
