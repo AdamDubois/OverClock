@@ -54,7 +54,7 @@ if __name__ == "__main__":
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
             print(f"Durée totale (lecture + parsing + extraction): {duree:.6f} secondes")
-            #time.sleep(0.1)  # Petite pause pour éviter de spammer le bus
+            time.sleep(0.1)  # Petite pause pour éviter de spammer le bus
     except KeyboardInterrupt:
         print("\nArrêt de la boucle.")
     finally:
