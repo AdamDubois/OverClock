@@ -1,6 +1,7 @@
 # Test boucle : lecture I2C, parsing JSON, extraction SW/BTN/BANA, mesure du temps à chaque itération
 from smbus2 import SMBus, i2c_msg  # sudo pip install smbus2
 import time
+import csv
 import json
 import re
 
@@ -22,12 +23,21 @@ def getI2C(bus):
 
 if __name__ == "__main__":
     bus = SMBus(1)
+    csv_filename = "temps_mesures_v2.csv"
+    # Création du fichier CSV et écriture de l'en-tête si le fichier n'existe pas
+    try:
+        with open(csv_filename, mode="a", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            if csvfile.tell() == 0:
+                writer.writerow(["timestamp", "duree_s"])
+    except Exception as e:
+        print(f"Erreur lors de la création du fichier CSV: {e}")
+
     try:
         print("Appuyez sur Ctrl+C pour arrêter la boucle.")
         while True:
             t0 = time.perf_counter()
             strReceived = getI2C(bus)
-            t1 = time.perf_counter()
             if strReceived is not None:
                 print(f"\nRéponse I2C brute : {strReceived}")
                 # Correction JSON et parsing
@@ -44,7 +54,17 @@ if __name__ == "__main__":
                     print(f"Erreur parsing JSON: {e}")
             else:
                 print("Aucune donnée reçue via I2C.")
-            print(f"Durée totale (lecture + parsing): {t1-t0:.6f} secondes")
+            t1 = time.perf_counter()
+            duree = t1 - t0
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            # Enregistrement dans le CSV
+            try:
+                with open(csv_filename, mode="a", newline="") as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow([timestamp, f"{duree:.6f}"])
+            except Exception as e:
+                print(f"Erreur lors de l'écriture dans le CSV: {e}")
+            print(f"Durée totale (lecture + parsing + extraction): {duree:.6f} secondes")
             time.sleep(1)  # Petite pause pour éviter de spammer le bus
     except KeyboardInterrupt:
         print("\nArrêt de la boucle.")
