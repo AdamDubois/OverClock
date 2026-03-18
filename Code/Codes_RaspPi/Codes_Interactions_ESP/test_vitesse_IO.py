@@ -45,7 +45,7 @@ if __name__ == "__main__":
             else:
                 print("Aucune donnée reçue via I2C.")
             print(f"Durée totale (lecture + parsing): {t1-t0:.6f} secondes")
-            time.sleep(0.2)  # Petite pause pour éviter de spammer le bus
+            time.sleep(1)  # Petite pause pour éviter de spammer le bus
     except KeyboardInterrupt:
         print("\nArrêt de la boucle.")
     finally:
