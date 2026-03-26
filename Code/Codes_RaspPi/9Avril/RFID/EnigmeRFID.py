@@ -91,22 +91,22 @@ try:
         if readers_values != last_readers_values:
             last_readers_values = readers_values.copy()
 
-            logger.debug(f"Modification des readers détectée : {readers_values}")
-            logger.debug(f"Sequence attendu : (9) {ID_CARTE_9}, (3) {ID_CARTE_3}, (4) {ID_CARTE_4}, (1) {ID_CARTE_1}")
+            #logger.debug(f"Modification des readers détectée : {readers_values}")
+            logger.debug(f"Sequence attendu : (9) {SOLUTION_READER0}, (3) {SOLUTION_READER1}, (4) {SOLUTION_READER2}, (1) {SOLUTION_READER3}")
 
-            if readers_values[0] == ID_CARTE_9:
+            if readers_values[0] == SOLUTION_READER0:
                 logger.debug("Bonne Premiere")
             else:
                 logger.debug("Mauvaise Premiere")
-            if readers_values[1] == ID_CARTE_3:
+            if readers_values[1] == SOLUTION_READER1:
                 logger.debug("Bonne Deuxieme")
             else:
                 logger.debug("Mauvaise Deuxieme")
-            if readers_values[2] == ID_CARTE_4:
+            if readers_values[2] == SOLUTION_READER2:
                 logger.debug("Bonne Troisieme")
             else:
                 logger.debug("Mauvaise Troisieme")
-            if readers_values[3] == ID_CARTE_1:
+            if readers_values[3] == SOLUTION_READER3:
                 logger.debug("Bonne Derniere")
             else:
                 logger.debug("Mauvaise Derniere")
