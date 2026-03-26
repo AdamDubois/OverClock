@@ -1,7 +1,7 @@
 import tkinter as tk
 
 # Choisir le mode de mélange : 'ADDITIF' ou 'SOUSTRACTIF'
-MODE_MELANGE = 'SOUSTRACTIF'
+MODE_MELANGE = 'ADDITIF'
 
 # Couleurs de base
 NOIR = "#000000"
