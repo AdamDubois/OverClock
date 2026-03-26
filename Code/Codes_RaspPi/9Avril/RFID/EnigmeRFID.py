@@ -27,12 +27,13 @@ def getI2C():
                 break
             strReceived += chr(value)
         # Convertir la liste d'octets en chaîne
-        logger.debug(f"[getI2C] Données reçues : {strReceived}")
+        #logger.debug(f"[getI2C] Données reçues : {strReceived}")
 
         return strReceived
     
     except Exception as e:
-        #logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
+        logger.error(f"[getI2C] Erreur de lecture I2C: {e}")
+        time.sleep(1)
         return None
     
 
@@ -56,7 +57,7 @@ def decodeJSON(json_str):
         # Prétraitement : ajouter des guillemets autour des clés si absent
         # Ajoute des guillemets autour des clés non entourées
         json_str_corrige = re.sub(r'([a-zA-Z0-9_]+):', r'"\1":', json_str)
-        logger.debug("JSON corrigé pour décodage: {json_str_corrige}")
+        #logger.debug(f"JSON corrigé pour décodage: {json_str_corrige}")
 
         data = json.loads(json_str_corrige)
         # Extraire les valeurs des readers
@@ -66,7 +67,7 @@ def decodeJSON(json_str):
                 return None
             elif key.startswith('R'):
                 index = int(key[1:])  # Extraire l'index du reader (ex: R3 -> 3)
-                logger.debug(f"Reader {index} est {value}")
+                #logger.debug(f"Reader {index} est {value}")
                 readers_values[index] = value
                 
         return readers_values # Retourne la liste des valeurs des readers après décodage (Si on se rends ici, c'est qu'il n'y a pas d'erreur)
@@ -91,8 +92,25 @@ try:
             last_readers_values = readers_values.copy()
 
             logger.debug(f"Modification des readers détectée : {readers_values}")
-            logger.debug(f"Sequence attendu : {SOLUTION}")
-            
+            logger.debug(f"Sequence attendu : (9) {ID_CARTE_9}, (3) {ID_CARTE_3}, (4) {ID_CARTE_4}, (1) {ID_CARTE_1}")
+
+            if readers_values[0] == ID_CARTE_9:
+                logger.debug("Bonne Premiere")
+            else:
+                logger.debug("Mauvaise Premiere")
+            if readers_values[1] == ID_CARTE_3:
+                logger.debug("Bonne Deuxieme")
+            else:
+                logger.debug("Mauvaise Deuxieme")
+            if readers_values[2] == ID_CARTE_4:
+                logger.debug("Bonne Troisieme")
+            else:
+                logger.debug("Mauvaise Troisieme")
+            if readers_values[3] == ID_CARTE_1:
+                logger.debug("Bonne Derniere")
+            else:
+                logger.debug("Mauvaise Derniere")
+
         time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
 
 
