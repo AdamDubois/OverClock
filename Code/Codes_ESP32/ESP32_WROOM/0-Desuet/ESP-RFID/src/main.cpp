@@ -27,17 +27,14 @@
 //Créer les instances MFRC522 pour chaque lecteur
 MFRC522 mfrc522[NR_OF_READERS];   // Create MFRC522 instance.
 
+//Strings contenant les UID des cartes lues
+String g_uidReaders[NR_OF_READERS] = {"NONE", "NONE", "NONE", "NONE"}; // UIDs des cartes lues
+
 // Instance de la classe Simple_Neo pour gérer la LED de débogage
 Debug_Neo Neo;
 
 // Définition du tableau ssPins
 byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN};
-
-// String pour stocker les données JSON à envoyer au maître
-String g_jsonData = "";
-
-//Strings contenant les UID des cartes lues
-String g_uidReaders[NR_OF_READERS] = {"NONE", "NONE", "NONE", "NONE"}; // UIDs des cartes lues
 
 
 
@@ -80,13 +77,9 @@ void setup() {
 }
 
 /*
-Brief : Lit en permanence les lecteurs RFID pour mettre à jour les UIDs des cartes présentes et prépare les données JSON à envoyer au maître I2C lorsqu'une demande est reçue.
+Brief : Boucle principale vide, car l'ESP32 agit en tant qu'esclave I2C.
 */
-void loop(){
-  resetUIDs(); // Réinitialiser les UIDs à "NONE" à chaque boucle pour éviter d'envoyer des données obsolètes au maître
-  scanReaders(); // Scanner les lecteurs RFID pour mettre à jour les UIDs des cartes présentes
-  g_jsonData = formatDataAsJSON(); // Mettre à jour les données JSON globales pour qu'elles soient prêtes à être envoyées lorsque le maître I2C fera une demande
-}
+void loop(){}
 
 
 
@@ -147,9 +140,17 @@ Scanne les lecteurs RFID, lit les UIDs des cartes, et envoie les données format
 void onRequest() {
   Neo.working(); // Indiquer que le système est en train de travailler
 
+  String jsonData = ""; // String pour stocker les données JSON à envoyer
+
   debug("Maître a demandé les données.\n");
 
-  Wire.write(g_jsonData.c_str()); // Envoyer les données en mémoire au maître I2C
+  resetUIDs();
+
+  scanReaders();
+
+  jsonData = formatDataAsJSON();
+
+  Wire.write(jsonData.c_str()); // Envoyer les données lues
   Wire.write((uint8_t)0x00); // Indicateur de fin de message
 
   debug("Données envoyées au maître.\n");
