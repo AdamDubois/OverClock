@@ -17,7 +17,9 @@ class Bouton:
         self.strip_selectionnee = 0 # Strip actuellement sélectionnée, peut être utilisée pour n'afficher que la couleur de la strip sélectionnée sur les LEDs, ou pour d'autres fonctionnalités liées à la sélection de strip
         self.strip_selectionnee_flash = self.strip_selectionnee # Strip actuellement sélectionnée pour le flash, peut être utilisée pour faire clignoter la strip sélectionnée lorsque le joueur appuie sur un bouton, ou pour d'autres fonctionnalités liées au flash de la strip sélectionnée
 
-        self.nb_bonnes_strips = 0 # Nombre de strips qui ont la bonne couleur, peut être utilisée pour vérifier si le joueur a résolu l'énigme, ou pour donner des indices sur le nombre de strips correctes
+        self.bonnes_strips = [False] * NB_STRIPS # Nombre de strips qui ont la bonne couleur, peut être utilisée pour vérifier si le joueur a résolu l'énigme, ou pour donner des indices sur le nombre de strips correctes
+
+        self.gagnee = False # Fonction à appeler lorsque le joueur gagne l'énigme, peut être redéfinie pour faire ce qu'on veut faire lorsqu'on gagne, par exemple déclencher une animation de victoire sur les bandes LED, ouvrir une porte, etc.
 
         # Initialisation de l'état des couleurs pour chaque strip en fonction de la configuration de départ
         for i in range(NB_STRIPS):
@@ -156,44 +158,49 @@ class Bouton:
                 else:
                     self.couleur_par_strips[i] = COULEUR_PAR_DEFAUT
 
+    def verifCorrespondance(self):
+        self.bonnes_strips = [False] * NB_STRIPS # Réinitialisation de la liste des strips correctes à chaque vérification pour éviter les erreurs d'incrémentation
+        for i in range(NB_STRIPS):
+            if self.couleur_par_strips[i] == COULEURS_CIBLES[i]:
+                self.bonnes_strips[i] = True
+        logger.debug(f"[verifCorrespondance] Nombre de strips correctes : {sum(self.bonnes_strips)} / {NB_STRIPS}")
+        
+        if all(self.bonnes_strips):
+            self.gagne() # Appeler la fonction de victoire lorsque l'énigme est résolue
+
+    def gagne(self):
+        """
+        Fonction à appeler lorsque le joueur gagne l'énigme.
+        Fait ce qu'on veut faire lorsqu'on gagne, par exemple déclencher une animation de victoire sur les bandes LED, ouvrir une porte, etc.
+        """
+        self.gagnee = True
+        logger.info("Enigme résolue ! Toutes les strips ont la bonne couleur.")
+
     def close(self):
         self.I2C_handler.close()
 
-bouton = Bouton()
-bouton.I2C_handler.sendI2C(bouton.formatToESPCommande()) # Envoi de la configuration de départ au démarrage du programme pour que l'ESP puisse afficher les bonnes couleurs dès le début
+    def play(self):
+        if not self.gagnee:
+            self.boutons_values_temp = self.I2C_handler.decodeJSON(self.I2C_handler.getI2C())
 
-try:
-    while True:
-        bouton.boutons_values_temp = bouton.I2C_handler.decodeJSON(bouton.I2C_handler.getI2C())
+            if self.boutons_values_temp is not None:
+                for i in range(NB_MODULES):
+                    if self.boutons_values_temp[i] == 1:
+                        self.boutons_values[i] = True
+                    elif self.boutons_values_temp[i] == 0:
+                        self.boutons_values[i] = False
+                    else:
+                        self.boutons_values[i] = True # Valeur par défaut en cas d'erreur de décodage, pour éviter d'avoir None dans les valeurs des boutons
+                        logger.warning(f"Valeur inattendue pour le bouton {i} : {self.boutons_values_temp[i]}. Valeur par défaut (True) utilisée.")
+            
+            if self.boutons_values != self.last_boutons_values:
+                logger.debug(f"Modification des boutons détectée : {self.boutons_values}")
 
-        if bouton.boutons_values_temp is not None:
-            for i in range(NB_MODULES):
-                if bouton.boutons_values_temp[i] == 1:
-                    bouton.boutons_values[i] = True
-                elif bouton.boutons_values_temp[i] == 0:
-                    bouton.boutons_values[i] = False
-                else:
-                    bouton.boutons_values[i] = True # Valeur par défaut en cas d'erreur de décodage, pour éviter d'avoir None dans les valeurs des boutons
-                    logger.warning(f"Valeur inattendue pour le bouton {i} : {bouton.boutons_values_temp[i]}. Valeur par défaut (True) utilisée.")
-        
-        if bouton.boutons_values != bouton.last_boutons_values:
-            logger.debug(f"Modification des boutons détectée : {bouton.boutons_values}")
+                if self.traiterBoutons(): # Si il y a eu un changement d'état des boutons qui a été traité (par exemple changement de strip sélectionnée ou changement d'une composante de couleur)
+                    self.melangeCouleurs()
 
-            if bouton.traiterBoutons(): # Si il y a eu un changement d'état des boutons qui a été traité (par exemple changement de strip sélectionnée ou changement d'une composante de couleur)
-                bouton.melangeCouleurs()
+                    self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la nouvelle configuration à l'ESP à chaque changement de bouton pour que les LEDs soient mises à jour en temps réel
 
-                bouton.I2C_handler.sendI2C(bouton.formatToESPCommande()) # Envoi de la nouvelle configuration à l'ESP à chaque changement de bouton pour que les LEDs soient mises à jour en temps réel
+                    self.verifCorrespondance() # Vérification de la correspondance entre les couleurs actuelles et les couleurs cibles à chaque changement de bouton pour vérifier si le joueur a résolu l'énigme
 
-            bouton.last_boutons_values = bouton.boutons_values.copy()
-        
-        else:
-            time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
-
-except Exception as e:
-    logger.error(f"Erreur inattendue dans le programme principal: {e}")
-
-except KeyboardInterrupt:
-    logger.info("Programme interrompu par l'utilisateur.")
-
-finally:
-    bouton.close()
+                self.last_boutons_values = self.boutons_values.copy()
