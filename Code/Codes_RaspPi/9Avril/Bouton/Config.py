@@ -64,12 +64,12 @@ elif MODE_MELANGE == 'SOUSTRACTIF':
     ALL_COULEURS = {
     # Couleurs de base utilisées pour le soustractif
     "ROUGE": "#FF0000",
-    "JAUNE": "#FFFF00",
+    "JAUNE": "#FFE600",
     "BLEU": "#0000FF",
 
     # Mélanges
     "BLANC": "#FFFFFF",   # Aucun bouton appuyé
-    "ORANGE": "#FF8000",   # Rouge + Jaune
+    "ORANGE": "#FF5000",   # Rouge + Jaune
     "VERT": "#00FF00",     # Jaune + Bleu
     "VIOLET": "#800080",   # Rouge + Bleu
     "MARRON": "#804000"   # Rouge + Jaune + Bleu
