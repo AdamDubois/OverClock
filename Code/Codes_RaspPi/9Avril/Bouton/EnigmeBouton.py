@@ -65,7 +65,8 @@ for couleurs in COULEURS_DEPART:
 
 selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
 selection_strip_flash = selection_strip  # Doit être égale à selection_strip, quand la couleur de cette strip est changée une fois, on la met à -1 pour arrêter le flash, et on la remet à selection_strip lorsqu'une nouvelle strip est sélectionnée
-couleurs_strip = COULEURS_DEPART.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
+couleurs_strip = [None] * NB_STRIPS  # Liste pour stocker les couleurs actuelles des strips, utilisée pour envoyer les bonnes couleurs à l'ESP32 via I2C
+couleurs_strip[0] = COULEURS_DEPART.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
 
 nb_bonnes_strips = 0 # Variable pour compter le nombre de strips qui sont dans la bonne couleur cible, utilisée pour vérifier si l'énigme est résolue
 
@@ -155,6 +156,22 @@ def gagne():
 
 try:
     lancer_enigme()
+
+    button_values_temp = I2C_handler.decodeJSON(I2C_handler.getI2C()) # Lit les valeurs des boutons depuis l'ESP32 via I2C pour initialiser button_values et last_button_values avec les bonnes valeurs au démarrage de l'énigme
+    if button_values_temp is not None:
+        for i in range(NB_MODULES):
+            if button_values_temp[i] == 1:
+                button_values[i] = True
+                last_button_values[i] = True
+            elif button_values_temp[i] == 0:
+                button_values[i] = False
+                last_button_values[i] = False
+            else:
+                logger.warning(f"Valeur inattendue pour bouton {i} lors de l'initialisation: {button_values_temp[i]}")
+                button_values[i] = True # Par défaut, on considère que les boutons sont à True si on reçoit une valeur inattendue lors de l'initialisation
+                last_button_values[i] = True
+
+        last_button_values = button_values.copy() # Assure que last_button_values est correctement initialisé avec les valeurs actuelles des boutons avant de commencer la boucle principale
 
     while True:
         button_values_temp = I2C_handler.decodeJSON(I2C_handler.getI2C()) # Lit les valeurs des boutons depuis l'ESP32 via I2C
