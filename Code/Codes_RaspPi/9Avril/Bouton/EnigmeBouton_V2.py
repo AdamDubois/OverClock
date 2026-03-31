@@ -59,6 +59,8 @@ class Bouton:
                 else: # Couleur par défaut (NOIR ou BLANC selon le mode de mélange)
                     self.etat_composantes_par_strip.append({"rouge": False, "jaune": False, "bleu": False})
 
+            self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la configuration de départ à l'ESP pour initialiser les LEDs à la bonne couleur au démarrage
+
     def formatToESPCommande(self):
         # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
         #  - E : numéro de l'énigme (pour vérification)
@@ -204,3 +206,46 @@ class Bouton:
                     self.verifCorrespondance() # Vérification de la correspondance entre les couleurs actuelles et les couleurs cibles à chaque changement de bouton pour vérifier si le joueur a résolu l'énigme
 
                 self.last_boutons_values = self.boutons_values.copy()
+
+bouton = Bouton()
+
+try:
+    while True:
+        # bouton.play()
+        # time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
+        
+        if not bouton.gagnee:
+            bouton.boutons_values_temp = bouton.I2C_handler.decodeJSON(bouton.I2C_handler.getI2C())
+
+            if bouton.boutons_values_temp is not None:
+                for i in range(NB_MODULES):
+                    if bouton.boutons_values_temp[i] == 1:
+                        bouton.boutons_values[i] = True
+                    elif bouton.boutons_values_temp[i] == 0:
+                        bouton.boutons_values[i] = False
+                    else:
+                        bouton.boutons_values[i] = True # Valeur par défaut en cas d'erreur de décodage, pour éviter d'avoir None dans les valeurs des boutons
+                        logger.warning(f"Valeur inattendue pour le bouton {i} : {bouton.boutons_values_temp[i]}. Valeur par défaut (True) utilisée.")
+            
+            if bouton.boutons_values != bouton.last_boutons_values:
+                logger.debug(f"Modification des boutons détectée : {bouton.boutons_values}")
+
+                if bouton.traiterBoutons(): # Si il y a eu un changement d'état des boutons qui a été traité (par exemple changement de strip sélectionnée ou changement d'une composante de couleur)
+                    bouton.melangeCouleurs()
+
+                    bouton.I2C_handler.sendI2C(bouton.formatToESPCommande()) # Envoi de la nouvelle configuration à l'ESP à chaque changement de bouton pour que les LEDs soient mises à jour en temps réel
+
+                    bouton.verifCorrespondance() # Vérification de la correspondance entre les couleurs actuelles et les couleurs cibles à chaque changement de bouton pour vérifier si le joueur a résolu l'énigme
+
+                bouton.last_boutons_values = bouton.boutons_values.copy()
+            else:
+                time.sleep(0.1) # Lorsque l'énigme est résolue, on peut réduire la fréquence de vérification des boutons pour économiser des ressources, ou même arrêter complètement la boucle si on n'a plus besoin de vérifier les boutons après la victoire
+
+except Exception as e:
+    logger.error(f"Erreur inattendue dans le programme principal: {e}")
+
+except KeyboardInterrupt:
+    logger.info("Programme interrompu par l'utilisateur.")
+
+finally:
+    bouton.close()
