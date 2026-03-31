@@ -11,7 +11,121 @@ class Bouton:
         self.boutons_values = [None] * NB_MODULES  # Valeurs actuelles des boutons
         self.last_boutons_values = self.boutons_values
 
-        print(f"Valeurs boutons de départ : {self.boutons_values}, Valeurs boutons last : {self.last_boutons_values}")
+        self.couleur_par_strips = COULEURS_DEPART.copy()
+        self.etat_composantes_par_strip = [] # Liste de dictionnaires pour stocker l'état des composantes de chaque strip, par exemple [{"rouge": True, "jaune": False, "bleu": True}, {...}, ...] pour indiquer quelles composantes sont actives pour chaque strip
 
+        self.strip_selectionnee = 0 # Strip actuellement sélectionnée, peut être utilisée pour n'afficher que la couleur de la strip sélectionnée sur les LEDs, ou pour d'autres fonctionnalités liées à la sélection de strip
+        self.strip_selectionnee_flash = self.strip_selectionnee # Strip actuellement sélectionnée pour le flash, peut être utilisée pour faire clignoter la strip sélectionnée lorsque le joueur appuie sur un bouton, ou pour d'autres fonctionnalités liées au flash de la strip sélectionnée
+
+        self.nb_bonnes_strips = 0 # Nombre de strips qui ont la bonne couleur, peut être utilisée pour vérifier si le joueur a résolu l'énigme, ou pour donner des indices sur le nombre de strips correctes
+
+        # Initialisation de l'état des couleurs pour chaque strip en fonction de la configuration de départ
+        for i in range(NB_STRIPS):
+            if MODE_MELANGE == 'ADDITIF':
+                if self.couleur_par_strips[i] == ALL_COULEURS["ROUGE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": False, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["VERT"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["BLEU"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["JAUNE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["MAGENTA"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["CYAN"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": True, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["BLANC"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": True, "bleu": True})
+                else: # Couleur par défaut (NOIR)
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": False, "bleu": False})
+
+            elif MODE_MELANGE == 'SOUSTRACTIF':
+                if self.couleur_par_strips[i] == ALL_COULEURS["ROUGE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": False, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["JAUNE"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["BLEU"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["ORANGE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["VERT"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": True, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["VIOLET"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["MARRON"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": True, "bleu": True})
+                else: # Couleur par défaut (NOIR ou BLANC selon le mode de mélange)
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": False, "bleu": False})
+
+    def formatToESPCommande(self):
+        # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
+        #  - E : numéro de l'énigme (pour vérification)
+        #  - Selected : numéro du strip sélectionné (0 à 4) ou -1 si aucun strip n'est sélectionné
+        message = {
+            "E": NUM_ENIGME,
+            "Selected": self.strip_selectionnee,
+            "S0": self.couleur_par_strips[0],
+            "S1": self.couleur_par_strips[1],
+            "S2": self.couleur_par_strips[2],
+            "S3": self.couleur_par_strips[3],
+            "S4": self.couleur_par_strips[4]
+        }
+        logger.debug(f"[formatToESPCommande] Message formaté à envoyer via I2C : {message}")
+        return message
+    
+    def traiterBoutons(self):
+        if self.boutons_values[0] == False: # Si le bouton 1 est appuyé
+            self.strip_selectionnee = (self.strip_selectionnee - 1) % NB_STRIPS # On sélectionne la strip précédente (en boucle)
+            self.strip_selectionnee_flash = self.strip_selectionnee # On met à jour la strip sélectionnée pour le flash
+            logger.debug(f"[traiterBoutons] Bouton 1 appuyé : strip sélectionnée = {self.strip_selectionnee}")
+        if self.boutons_values[1] == False: # Si le bouton 2 est appuyé
+            self.strip_selectionnee = (self.strip_selectionnee + 1) % NB_STRIPS # On sélectionne la strip suivante (en boucle)
+            self.strip_selectionnee_flash = self.strip_selectionnee # On met à jour la strip sélectionnée pour le flash
+            logger.debug(f"[traiterBoutons] Bouton 2 appuyé : strip sélectionnée = {self.strip_selectionnee}")
+        if self.boutons_values[2] == False: # Si le bouton 3
+            self.etat_composantes_par_strip[self.strip_selectionnee]["rouge"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["rouge"] # On inverse l'état de la composante rouge de la strip sélectionnée
+            logger.debug(f"[traiterBoutons] Bouton 3 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante rouge = {self.etat_composantes_par_strip[self.strip_selectionnee]['rouge']}")
+        if self.boutons_values[3] == False: # Si le bouton 4
+            if MODE_MELANGE == 'ADDITIF':
+                self.etat_composantes_par_strip[self.strip_selectionnee]["vert"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["vert"] # On inverse l'état de la composante vert de la strip sélectionnée
+                logger.debug(f"[traiterBoutons] Bouton 4 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante vert = {self.etat_composantes_par_strip[self.strip_selectionnee]['vert']}")
+            elif MODE_MELANGE == 'SOUSTRACTIF':
+                self.etat_composantes_par_strip[self.strip_selectionnee]["jaune"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["jaune"] # On inverse l'état de la composante jaune de la strip sélectionnée
+                logger.debug(f"[traiterBoutons] Bouton 4 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante jaune = {self.etat_composantes_par_strip[self.strip_selectionnee]['jaune']}")
+        if self.boutons_values[4] == False: # Si le bouton 5
+            self.etat_composantes_par_strip[self.strip_selectionnee]["bleu"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["bleu"] # On inverse l'état de la composante bleu de la strip sélectionnée
+            logger.debug(f"[traiterBoutons] Bouton 5 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante bleu = {self.etat_composantes_par_strip[self.strip_selectionnee]['bleu']}")
+
+    def close(self):
+        self.I2C_handler.close()
 
 bouton = Bouton()
+bouton.I2C_handler.sendI2C(bouton.formatToESPCommande()) # Envoi de la configuration de départ au démarrage du programme pour que l'ESP puisse afficher les bonnes couleurs dès le début
+
+try:
+    while True:
+        bouton.boutons_values_temp = bouton.I2C_handler.decodeJSON(bouton.I2C_handler.getI2C())
+
+        if bouton.boutons_values_temp is not None:
+            for i in range(NB_MODULES):
+                if bouton.boutons_values_temp[i] == 1:
+                    bouton.boutons_values[i] = True
+                elif bouton.boutons_values_temp[i] == 0:
+                    bouton.boutons_values[i] = False
+                else:
+                    bouton.boutons_values[i] = True # Valeur par défaut en cas d'erreur de décodage, pour éviter d'avoir None dans les valeurs des boutons
+                    logger.warning(f"Valeur inattendue pour le bouton {i} : {bouton.boutons_values_temp[i]}. Valeur par défaut (True) utilisée.")
+        
+        if bouton.boutons_values != bouton.last_boutons_values:
+            bouton.traiterBoutons()
+
+            bouton.last_boutons_values = bouton.boutons_values
+
+except Exception as e:
+    logger.error(f"Erreur inattendue dans le programme principal: {e}")
+
+except KeyboardInterrupt:
+    logger.info("Programme interrompu par l'utilisateur.")
+
+finally:
+    bouton.close()
