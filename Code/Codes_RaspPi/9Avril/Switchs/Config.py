@@ -24,6 +24,8 @@ __status__ = "Production"
 # Index 2 (SW2) : Le connecteur, branché/débranché (CC quand il est en position Initiale (branché) et NC quand il est débranché)
 # Index 3 (SW3) : L'interrupteur à tourner (NC quand il est en position Initiale et CC quand il est togglé)
 
+NUM_ENIGME = 2
+
 # Valeur de départ pour les switchs [SW0, SW1, SW2, SW3]
 VALEUR_SWITCHES_INIT = [True, True, False, True]
 
@@ -52,8 +54,13 @@ MSG_LED_VERT = [3, 4, 5, 6, 7, 8, 9, 10, 11] # Pour allumer la première DEL en 
 DEBUG_MODE = True  # Change to False to disable debug messages
 
 # I2C Configuration
-ADDR_ESPIO = 0x10
-ADDR_ESPNEO = 0x12
+ADDR_ESP_DEMANDE = 0x10
+NOM_ESP_DEMANDE = "IO"
+VALEUR_CLE = "SW"
+NB_MODULES = 4
+TEMPS_ATTENTE_ERREUR = 1 # Temps d'attente en secondes en cas d'erreur de lecture I2C ou de décodage JSON, peut être ajusté selon les besoins
+
+ADDR_ESP_COMMANDE = 0x12
 
 
 

@@ -25,10 +25,7 @@ ID_CARTE_1 = "164C5C42"
 
 SOLUTION = "9341"
 
-SOLUTION_READER0 = ID_CARTE_9
-SOLUTION_READER1 = ID_CARTE_3
-SOLUTION_READER2 = ID_CARTE_4
-SOLUTION_READER3 = ID_CARTE_1
+SOLUTION_READER = [ID_CARTE_9, ID_CARTE_3, ID_CARTE_4, ID_CARTE_1]
 
 
 
@@ -42,8 +39,13 @@ SOLUTION_READER3 = ID_CARTE_1
 DEBUG_MODE = True  # Change to False to disable debug messages
 
 # I2C Configuration
-ADDR_ESPRFID = 0x11
-ADDR_ESPNEO = 0x12
+ADDR_ESP_DEMANDE = 0x11
+NOM_ESP_DEMANDE = "RFID"
+VALEUR_CLE = "R"
+NB_MODULES = 4
+TEMPS_ATTENTE_ERREUR = 1 # Temps d'attente en secondes en cas d'erreur de lecture I2C ou de décodage JSON, peut être ajusté selon les besoins
+
+ADDR_ESP_COMMANDE = 0x12
 
 
 

@@ -74,6 +74,16 @@ void commandeI2C(int howMany) {
 }
 
 void applyColors(JsonDocument& doc) {
+  """
+  Format du JSON attendu : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
+   - E : numéro de l'énigme (pour vérification)
+   - Selected : numéro du strip sélectionné (0 à 4) ou -1 si aucun strip n'est sélectionné
+     - Si Selected est différent de -1, alors la strip doit flasher pour indiquer qu'elle est sélectionnée
+   - S0 à S4 : couleurs au format hexadécimal pour chaque strip
+   Exemple : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
+   Ce format permet de transmettre toutes les informations nécessaires pour mettre à jour les couleurs des strips en une seule commande JSON.
+  """
+
   for (int i = 0; i < 5; i++) {
     String key = "S" + String(i);
 

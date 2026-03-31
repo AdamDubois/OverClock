@@ -155,9 +155,16 @@ try:
     last_button_values = [False] * 5  # Variable pour stocker les valeurs des boutons lors de la dernière itération
     button_values_temp = [False] * 5  # Variable temporaire pour stocker les valeurs des boutons avant de les copier dans button_values
 
+    etat_couleurs = None
+
+    for i in range(NB_STRIPS):
+        for j in range(3): # Rouge, Jaune ou Vert et Bleu
+            etat_couleurs[i][j] = False # False signifie que la couleur n'est pas activée, True signifie que la couleur est activée (ex: si etat_couleurs[0][0] == True, cela signifie que la couleur rouge est activée pour la strip 0)
+
     selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
     couleurs_strip = couleurs_depart.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
 
+    # Format du message à envoyer via I2C : {"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
     message = "{" + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
     logger.debug(f"[lancer_enigme] Message initial à envoyer via I2C : {message}")
     data = [ord(c) for c in message]
@@ -182,6 +189,20 @@ try:
 
         if button_values != last_button_values:
             logger.debug(f"Changement détecté dans les valeurs des boutons: {button_values}")
+
+            if button_values[0] == False and last_button_values[0] == True:
+                selection_strip = (selection_strip - 1) % NB_STRIPS
+                selection_strip_flash = selection_strip
+                logger.debug(f"Strip sélectionné : {selection_strip}")
+
+            elif button_values[1] == False and last_button_values[1] == True:
+                selection_strip = (selection_strip + 1) % NB_STRIPS
+                selection_strip_flash = selection_strip
+                logger.debug(f"Strip sélectionné : {selection_strip}")
+
+            
+
+
             last_button_values = button_values.copy()
 
 except Exception as e:
