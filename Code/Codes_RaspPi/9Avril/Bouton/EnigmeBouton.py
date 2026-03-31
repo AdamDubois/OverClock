@@ -9,13 +9,16 @@ last_button_values = [False] * NB_MODULES  # Variable pour stocker les valeurs d
 button_values_temp = [False] * NB_MODULES  # Variable temporaire pour stocker les valeurs des boutons avant de les copier dans button_values
 etat_couleurs = None # Variable pour stocker l'état des couleurs (rouge, jaune ou vert et bleu) pour chaque strip
 
+
+# Correction : initialisation correcte de la liste des états de couleurs
+etat_couleurs = []
 for i in range(NB_STRIPS):
-        etat_couleurs[i] = {
-            "rouge": False,
-            "jaune": False, # utilisé pour le soustractif
-            "bleu": False,
-            "vert": False # utilisé seulement pour l'additif
-        }
+    etat_couleurs.append({
+        "rouge": False,
+        "jaune": False, # utilisé pour le soustractif
+        "bleu": False,
+        "vert": False # utilisé seulement pour l'additif
+    })
 
 for couleurs in COULEURS_DEPART:
     if MODE_MELANGE == 'ADDITIF': 
@@ -72,14 +75,16 @@ def lancer_enigme():
     I2C_handler.sendI2C(message) # Envoie le message formaté à l'ESP32 pour initialiser les couleurs des strips et la sélection
 
 def formatToESPCommande():
+    global selection_strip_flash
     # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
     #  - E : numéro de l'énigme (pour vérification)
     #  - Selected : numéro du strip sélectionné (0 à 4) ou -1 si aucun strip n'est sélectionné
-    message = "{\"E\":" + str(NUM_ENIGME) + ",\"Selected\":" + str(selection_strip_flash) + "," + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
+    message = "{\"E\":" + str(NUM_ENIGME) + ",\"Selected\":" + str(selection_strip_flash) + "," + ",".join(f'"S{i}":"{c}"' for i, c in enumerate(couleurs_strip)) + "}"
     logger.debug(f"[formatToESPCommande] Message formaté à envoyer via I2C : {message}")
     return message
 
 def traiter_changement_boutons():
+    global selection_strip, selection_strip_flash
     if button_values[0] == False and last_button_values[0] == True:
         selection_strip = (selection_strip - 1) % NB_STRIPS
         selection_strip_flash = selection_strip
@@ -152,7 +157,7 @@ try:
     lancer_enigme()
 
     while True:
-        button_values_temp = I2C_handler.getI2C() # Lit les valeurs des boutons depuis l'ESP32 via I2C
+        button_values_temp = I2C_handler.decodeJSON(I2C_handler.getI2C()) # Lit les valeurs des boutons depuis l'ESP32 via I2C
 
         if button_values_temp is not None:
             for i in range(NB_MODULES):
@@ -181,7 +186,7 @@ try:
                     logger.debug(f"Strip {i} est dans la couleur cible {COULEURS_CIBLES[i]}")
                     nb_bonnes_strips += 1
                 else:
-                    logger.debug(f"Strip {i} n'est pas dans la couleur cible {COULEURS_CIBLES[i]}, elle est dans la couleur {couleurs_strip[i]}")
+                    pass#logger.debug(f"Strip {i} n'est pas dans la couleur cible {COULEURS_CIBLES[i]}, elle est dans la couleur {couleurs_strip[i]}")
 
             if nb_bonnes_strips == NB_STRIPS:
                 logger.info("Toutes les strips sont dans la bonne couleur cible, l'énigme est résolue !")
@@ -195,4 +200,10 @@ try:
 
 except Exception as e:
     logger.error(f"Erreur lors du démarrage de l'énigme : {e}")
+
+except KeyboardInterrupt:
+    logger.info("Programme interrompu par l'utilisateur.")
+
+finally:
+    I2C_handler.close()
     quit()
