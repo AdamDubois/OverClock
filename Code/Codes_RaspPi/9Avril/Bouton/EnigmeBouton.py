@@ -12,15 +12,24 @@ etat_couleurs = None # Variable pour stocker l'état des couleurs (rouge, jaune 
 
 # Correction : initialisation correcte de la liste des états de couleurs
 etat_couleurs = []
-for i in range(NB_STRIPS):
-    etat_couleurs.append({
+
+selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
+selection_strip_flash = selection_strip  # Doit être égale à selection_strip, quand la couleur de cette strip est changée une fois, on la met à -1 pour arrêter le flash, et on la remet à selection_strip lorsqu'une nouvelle strip est sélectionnée
+couleurs_strip = [None] * NB_STRIPS  # Liste pour stocker les couleurs actuelles des strips, utilisée pour envoyer les bonnes couleurs à l'ESP32 via I2C
+couleurs_strip[0] = COULEURS_DEPART.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
+
+nb_bonnes_strips = 0 # Variable pour compter le nombre de strips qui sont dans la bonne couleur cible, utilisée pour vérifier si l'énigme est résolue
+
+def init():
+    for i in range(NB_STRIPS):
+        etat_couleurs.append({
         "rouge": False,
         "jaune": False, # utilisé pour le soustractif
         "bleu": False,
         "vert": False # utilisé seulement pour l'additif
     })
 
-for couleurs in COULEURS_DEPART:
+for i, couleurs in enumerate(COULEURS_DEPART):
     if MODE_MELANGE == 'ADDITIF': 
         if couleurs == ALL_COULEURS["ROUGE"]:
             etat_couleurs[i]["rouge"] = True
@@ -63,14 +72,8 @@ for couleurs in COULEURS_DEPART:
             etat_couleurs[i]["jaune"] = True
             etat_couleurs[i]["bleu"] = True
 
-selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
-selection_strip_flash = selection_strip  # Doit être égale à selection_strip, quand la couleur de cette strip est changée une fois, on la met à -1 pour arrêter le flash, et on la remet à selection_strip lorsqu'une nouvelle strip est sélectionnée
-couleurs_strip = [None] * NB_STRIPS  # Liste pour stocker les couleurs actuelles des strips, utilisée pour envoyer les bonnes couleurs à l'ESP32 via I2C
-couleurs_strip[0] = COULEURS_DEPART.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
-
-nb_bonnes_strips = 0 # Variable pour compter le nombre de strips qui sont dans la bonne couleur cible, utilisée pour vérifier si l'énigme est résolue
-
 def lancer_enigme():
+    init()
     message = formatToESPCommande() # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
     logger.debug(f"[lancer_enigme] Message initial à envoyer via I2C : {message}")
     I2C_handler.sendI2C(message) # Envoie le message formaté à l'ESP32 pour initialiser les couleurs des strips et la sélection
