@@ -78,7 +78,7 @@ elif MODE_MELANGE == 'SOUSTRACTIF':
     COULEUR_PAR_DEFAUT = ALL_COULEURS["BLANC"] # Couleur qui sera affichée lorsque aucun bouton n'est appuyé (tous les filtres sont éteints)
 
 
-COULEURS_CIBLES = [ALL_COULEURS["ORANGE"], ALL_COULEURS["VERT"], ALL_COULEURS["VIOLET"], ALL_COULEURS["BLEU"], ALL_COULEURS["BLANC"]]  # Couleurs cibles à atteindre pour résoudre l'énigme (peuvent être modifiées selon les besoins)
+COULEURS_CIBLES = [ALL_COULEURS["VIOLET"], ALL_COULEURS["BLEU"], ALL_COULEURS["VERT"], ALL_COULEURS["JAUNE"], ALL_COULEURS["ORANGE"]]  # Couleurs cibles à atteindre pour résoudre l'énigme (peuvent être modifiées selon les besoins)
 
 COULEURS_DEPART = [COULEUR_PAR_DEFAUT] * NB_STRIPS  # Couleur de départ pour chaque strip (peut être modifiée selon les besoins)
 
