@@ -85,7 +85,7 @@ COULEURS_DEPART = [COULEUR_PAR_DEFAUT] * NB_STRIPS  # Couleur de départ pour ch
 for i in range(NB_STRIPS):
     couleur_rand = None
     # Génere des couleurs de départ différentes pour chaque strip avec random
-    while couleur_rand is None or couleur_rand == COULEURS_CIBLES[i] or couleur_rand == ALL_COULEURS["NOIR"]:
+    while couleur_rand is None or couleur_rand == COULEURS_CIBLES[i] or couleur_rand == ALL_COULEURS["NOIR"] or couleur_rand == ALL_COULEURS["MARRON"]:
         couleur_rand = random.choice(list(ALL_COULEURS.values()))
     COULEURS_DEPART[i] = couleur_rand
 
