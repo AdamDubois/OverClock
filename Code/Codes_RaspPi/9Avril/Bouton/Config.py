@@ -55,7 +55,7 @@ if MODE_MELANGE == 'ADDITIF':
     "NOIR": "#000000",   # Aucun bouton appuyé
     "JAUNE": "#FFFF00",  # Rouge + Vert
     "CYAN": "#00FFFF",    # Vert + Bleu
-    "MAGENTA": "#FF00FF", # Rouge + Bleu
+    "MAGENTA": "#FF8800", # Rouge + Bleu
     "BLANC": "#FFFFFF"   # Rouge + Vert + Bleu
 }
     COULEUR_PAR_DEFAUT = ALL_COULEURS["NOIR"] # Couleur qui sera affichée lorsque aucun bouton n'est appuyé (tous les filtres sont éteints)
@@ -69,22 +69,23 @@ elif MODE_MELANGE == 'SOUSTRACTIF':
 
     # Mélanges
     "BLANC": "#FFFFFF",   # Aucun bouton appuyé
+    "NOIR" : "#000000",   # Rouge + Jaune + Bleu
     "ORANGE": "#FF4800",   # Rouge + Jaune
     "VERT": "#00FF00",     # Jaune + Bleu
     "VIOLET": "#800080",   # Rouge + Bleu
-    "MARRON": "#804000"   # Rouge + Jaune + Bleu
+    "MARRON": "#532A00"   # Rouge + Jaune + Bleu
 }
     COULEUR_PAR_DEFAUT = ALL_COULEURS["BLANC"] # Couleur qui sera affichée lorsque aucun bouton n'est appuyé (tous les filtres sont éteints)
 
 
-COULEURS_CIBLES = [ALL_COULEURS["ORANGE"], ALL_COULEURS["VERT"], ALL_COULEURS["VIOLET"], ALL_COULEURS["MARRON"], ALL_COULEURS["BLANC"]]  # Couleurs cibles à atteindre pour résoudre l'énigme (peuvent être modifiées selon les besoins)
+COULEURS_CIBLES = [ALL_COULEURS["ORANGE"], ALL_COULEURS["VERT"], ALL_COULEURS["VIOLET"], ALL_COULEURS["BLEU"], ALL_COULEURS["BLANC"]]  # Couleurs cibles à atteindre pour résoudre l'énigme (peuvent être modifiées selon les besoins)
 
 COULEURS_DEPART = [COULEUR_PAR_DEFAUT] * NB_STRIPS  # Couleur de départ pour chaque strip (peut être modifiée selon les besoins)
 
 for i in range(NB_STRIPS):
     couleur_rand = None
     # Génere des couleurs de départ différentes pour chaque strip avec random
-    while couleur_rand is None or couleur_rand == COULEURS_CIBLES[i]:
+    while couleur_rand is None or couleur_rand == COULEURS_CIBLES[i] or couleur_rand == ALL_COULEURS["NOIR"]:
         couleur_rand = random.choice(list(ALL_COULEURS.values()))
     COULEURS_DEPART[i] = couleur_rand
 

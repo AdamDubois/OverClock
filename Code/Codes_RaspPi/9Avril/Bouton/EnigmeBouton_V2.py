@@ -59,21 +59,30 @@ class Bouton:
                 else: # Couleur par défaut (NOIR ou BLANC selon le mode de mélange)
                     self.etat_composantes_par_strip.append({"rouge": False, "jaune": False, "bleu": False})
 
-            self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la configuration de départ à l'ESP pour initialiser les LEDs à la bonne couleur au démarrage
+    def start(self):
+        self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la configuration de départ à l'ESP pour initialiser les LEDs à la bonne couleur au démarrage
 
-    def formatToESPCommande(self):
+    def formatToESPCommande(self,strip_selectionnee=None):
+        if strip_selectionnee is None:
+            strip_selectionnee = self.strip_selectionnee
         # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
         #  - E : numéro de l'énigme (pour vérification)
         #  - Selected : numéro du strip sélectionné (0 à 4) ou -1 si aucun strip n'est sélectionné
         message = {
             "E": NUM_ENIGME,
-            "Selected": self.strip_selectionnee_flash,
+            "Selected": strip_selectionnee,
             "S0": self.couleur_par_strips[0],
             "S1": self.couleur_par_strips[1],
             "S2": self.couleur_par_strips[2],
             "S3": self.couleur_par_strips[3],
             "S4": self.couleur_par_strips[4]
         }
+
+        # Remplace les ' par des " dans message
+
+        message = str(message).replace("'", '"')
+        message = str(message).replace(" ", "") # Supprime les espaces pour réduire la taille du message à envoyer via I2C, ce qui peut être important si on a une limite de taille de message à respecter
+
         logger.debug(f"[formatToESPCommande] Message formaté à envoyer via I2C : {message}")
         return message
     
@@ -144,7 +153,7 @@ class Bouton:
                 bleu = self.etat_composantes_par_strip[i]["bleu"]
 
                 if rouge and jaune and bleu:
-                    self.couleur_par_strips[i] = ALL_COULEURS["MARRON"]
+                    self.couleur_par_strips[i] = ALL_COULEURS["NOIR"]
                 elif rouge and jaune and not bleu:
                     self.couleur_par_strips[i] = ALL_COULEURS["ORANGE"]
                 elif rouge and not jaune and bleu:
@@ -177,6 +186,8 @@ class Bouton:
         """
         self.gagnee = True
         logger.info("Enigme résolue ! Toutes les strips ont la bonne couleur.")
+        self.I2C_handler.sendI2C(self.formatToESPCommande(strip_selectionnee=-1)) # Envoi de la configuration finale à l'ESP avec strip_selectionnee à -1 pour indiquer que l'énigme est résolue, peut être utilisé par l'ESP pour déclencher une animation de victoire spécifique ou d'autres actions liées à la victoire
+        quit() # Quitter le programme après la victoire, peut être remplacé par une boucle d'attente ou d'autres actions si on ne veut pas quitter immédiatement après la victoire
 
     def close(self):
         self.I2C_handler.close()
@@ -208,6 +219,9 @@ class Bouton:
                 self.last_boutons_values = self.boutons_values.copy()
 
 bouton = Bouton()
+bouton.start()
+
+print("Depasse instance")
 
 try:
     while True:
