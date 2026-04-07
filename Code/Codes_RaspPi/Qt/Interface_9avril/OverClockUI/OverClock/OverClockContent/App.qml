@@ -9,8 +9,23 @@ Window {
     visible: true
     color: "#0F1419"
     title: "OverClock"
-	
-    visibility: Window.FullScreen
+
+    // visibility: Window.FullScreen
+
+    // Gestion clavier via un Item
+    Item {
+        id: keyHandler
+        anchors.fill: parent
+        focus: true
+
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                Qt.quit()
+            }
+        }
+
+        Component.onCompleted: forceActiveFocus()
+    }
 
     IdleScreen {
         anchors.fill: parent

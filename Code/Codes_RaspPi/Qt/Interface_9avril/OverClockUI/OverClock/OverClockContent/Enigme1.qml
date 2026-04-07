@@ -190,7 +190,7 @@ Rectangle {
                 width: 1278
                 height: 796
                 visible: true
-                source: "../../../../Pictures/CadenasRouge.png"
+                source: "images/CadenasRouge.png"
                 fillMode: Image.PreserveAspectFit
 
                 Text {
