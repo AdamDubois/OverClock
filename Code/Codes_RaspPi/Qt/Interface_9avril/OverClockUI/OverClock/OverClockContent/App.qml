@@ -10,7 +10,12 @@ Window {
     color: "#0F1419"
     title: "OverClock"
 
-    // visibility: Window.FullScreen
+    visibility: Window.FullScreen
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.BlankCursor
+    }
 
     // Gestion clavier via un Item
     Item {
