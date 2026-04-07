@@ -9,6 +9,8 @@ Window {
     visible: true
     color: "#0F1419"
     title: "OverClock"
+	
+    visibility: Window.FullScreen
 
     IdleScreen {
         anchors.fill: parent
