@@ -1,0 +1,21 @@
+<RCC>
+    <qresource>
+        <file>Generated/QtQuick3D/OverClocktxt/_importdata.json</file>
+        <file>Generated/QtQuick3D/OverClocktxt/meshes/overClock_mesh.mesh</file>
+        <file>Generated/QtQuick3D/OverClocktxt/OverClocktxt.qml</file>
+        <file>Generated/QtQuick3D/OverClocktxt/qmldir</file>
+        <file>OverClock.qmlproject</file>
+        <file>OverClock/Constants.qml</file>
+        <file>OverClock/EventListModel.qml</file>
+        <file>OverClock/EventListSimulator.qml</file>
+        <file>OverClock/qmldir</file>
+        <file>OverClockContent/App.qml</file>
+        <file>OverClockContent/Enigme2.qml</file>
+        <file>OverClockContent/Enigme3.qml</file>
+        <file>OverClockContent/FinScreen.qml</file>
+        <file>OverClockContent/GameScreen.qml</file>
+        <file>OverClockContent/IdleScreen.qml</file>
+        <file>OverClockContent/images/OverClock_Logo.png</file>
+        <file>qtquickcontrols2.conf</file>
+    </qresource>
+</RCC>

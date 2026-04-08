@@ -108,8 +108,8 @@ const String ESP32_NAME = "RFID";
 
 #define SS_1_PIN    3
 #define SS_2_PIN    1
-#define SS_3_PIN    18
-#define SS_4_PIN    19
+#define SS_3_PIN    20
+#define SS_4_PIN    21
 
 //xtern byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN}; // Tableau des broches SS
 extern byte ssPins[]; // Tableau des broches SS

@@ -1,198 +1,254 @@
 from Config import *
 from I2C_handler import I2C
 from Log import logger
+import time
 
-I2C_handler = I2C()
+class Bouton:
+    def __init__(self):
+        self.I2C_handler = I2C()
 
-button_values = [False] * NB_MODULES  # Initialisation de la liste des valeurs des boutons
-last_button_values = [False] * NB_MODULES  # Variable pour stocker les valeurs des boutons lors de la dernière itération
-button_values_temp = [False] * NB_MODULES  # Variable temporaire pour stocker les valeurs des boutons avant de les copier dans button_values
-etat_couleurs = None # Variable pour stocker l'état des couleurs (rouge, jaune ou vert et bleu) pour chaque strip
+        self.boutons_values_temp = [None] * NB_MODULES  # Valeurs temporaires des boutons pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
+        self.boutons_values = [None] * NB_MODULES  # Valeurs actuelles des boutons
+        self.last_boutons_values = self.boutons_values.copy()  # Valeurs des boutons lors de la dernière vérification
 
-for i in range(NB_STRIPS):
-        etat_couleurs[i] = {
-            "rouge": False,
-            "jaune": False, # utilisé pour le soustractif
-            "bleu": False,
-            "vert": False # utilisé seulement pour l'additif
+        self.couleur_par_strips = COULEURS_DEPART.copy()
+        self.etat_composantes_par_strip = [] # Liste de dictionnaires pour stocker l'état des composantes de chaque strip, par exemple [{"rouge": True, "jaune": False, "bleu": True}, {...}, ...] pour indiquer quelles composantes sont actives pour chaque strip
+
+        self.strip_selectionnee = 0 # Strip actuellement sélectionnée, peut être utilisée pour n'afficher que la couleur de la strip sélectionnée sur les LEDs, ou pour d'autres fonctionnalités liées à la sélection de strip
+        self.strip_selectionnee_flash = self.strip_selectionnee # Strip actuellement sélectionnée pour le flash, peut être utilisée pour faire clignoter la strip sélectionnée lorsque le joueur appuie sur un bouton, ou pour d'autres fonctionnalités liées au flash de la strip sélectionnée
+
+        self.bonnes_strips = [False] * NB_STRIPS # Nombre de strips qui ont la bonne couleur, peut être utilisée pour vérifier si le joueur a résolu l'énigme, ou pour donner des indices sur le nombre de strips correctes
+
+        self.gagnee = False # Fonction à appeler lorsque le joueur gagne l'énigme, peut être redéfinie pour faire ce qu'on veut faire lorsqu'on gagne, par exemple déclencher une animation de victoire sur les bandes LED, ouvrir une porte, etc.
+
+        # Initialisation de l'état des couleurs pour chaque strip en fonction de la configuration de départ
+        for i in range(NB_STRIPS):
+            if MODE_MELANGE == 'ADDITIF':
+                if self.couleur_par_strips[i] == ALL_COULEURS["ROUGE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": False, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["VERT"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["BLEU"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["JAUNE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["MAGENTA"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["CYAN"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": True, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["BLANC"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "vert": True, "bleu": True})
+                else: # Couleur par défaut (NOIR)
+                    self.etat_composantes_par_strip.append({"rouge": False, "vert": False, "bleu": False})
+
+            elif MODE_MELANGE == 'SOUSTRACTIF':
+                if self.couleur_par_strips[i] == ALL_COULEURS["ROUGE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": False, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["JAUNE"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["BLEU"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["ORANGE"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": True, "bleu": False})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["VERT"]:
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": True, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["VIOLET"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": False, "bleu": True})
+                elif self.couleur_par_strips[i] == ALL_COULEURS["MARRON"]:
+                    self.etat_composantes_par_strip.append({"rouge": True, "jaune": True, "bleu": True})
+                else: # Couleur par défaut (NOIR ou BLANC selon le mode de mélange)
+                    self.etat_composantes_par_strip.append({"rouge": False, "jaune": False, "bleu": False})
+
+    def start(self):
+        self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la configuration de départ à l'ESP pour initialiser les LEDs à la bonne couleur au démarrage
+
+    def formatToESPCommande(self,strip_selectionnee=None):
+        if strip_selectionnee is None:
+            strip_selectionnee = self.strip_selectionnee
+        # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
+        #  - E : numéro de l'énigme (pour vérification)
+        #  - Selected : numéro du strip sélectionné (0 à 4) ou -1 si aucun strip n'est sélectionné
+        message = {
+            "E": NUM_ENIGME,
+            "Selected": strip_selectionnee,
+            "S0": self.couleur_par_strips[0],
+            "S1": self.couleur_par_strips[1],
+            "S2": self.couleur_par_strips[2],
+            "S3": self.couleur_par_strips[3],
+            "S4": self.couleur_par_strips[4]
         }
 
-for couleurs in COULEURS_DEPART:
-    if MODE_MELANGE == 'ADDITIF': 
-        if couleurs == ALL_COULEURS["ROUGE"]:
-            etat_couleurs[i]["rouge"] = True
-        elif couleurs == ALL_COULEURS["VERT"]:
-            etat_couleurs[i]["vert"] = True
-        elif couleurs == ALL_COULEURS["BLEU"]:
-            etat_couleurs[i]["bleu"] = True
-        elif couleurs == ALL_COULEURS["JAUNE"]:
-            etat_couleurs[i]["rouge"] = True
-            etat_couleurs[i]["vert"] = True
-        elif couleurs == ALL_COULEURS["CYAN"]:
-            etat_couleurs[i]["vert"] = True
-            etat_couleurs[i]["bleu"] = True
-        elif couleurs == ALL_COULEURS["MAGENTA"]:
-            etat_couleurs[i]["rouge"] = True
-            etat_couleurs[i]["bleu"] = True
-        elif couleurs == ALL_COULEURS["BLANC"]:
-            etat_couleurs[i]["rouge"] = True
-            etat_couleurs[i]["vert"] = True
-            etat_couleurs[i]["bleu"] = True
+        # Remplace les ' par des " dans message
 
-    elif MODE_MELANGE == 'SOUSTRACTIF':
-        if couleurs == ALL_COULEURS["ROUGE"]:
-            etat_couleurs[i]["rouge"] = True
-        elif couleurs == ALL_COULEURS["JAUNE"]:
-            etat_couleurs[i]["jaune"] = True
-        elif couleurs == ALL_COULEURS["BLEU"]:
-            etat_couleurs[i]["bleu"] = True
-        elif couleurs == ALL_COULEURS["ORANGE"]:
-            etat_couleurs[i]["rouge"] = True
-            etat_couleurs[i]["jaune"] = True
-        elif couleurs == ALL_COULEURS["VERT"]:
-            etat_couleurs[i]["jaune"] = True
-            etat_couleurs[i]["bleu"] = True
-        elif couleurs == ALL_COULEURS["VIOLET"]:
-            etat_couleurs[i]["rouge"] = True
-            etat_couleurs[i]["bleu"] = True
-        elif couleurs == ALL_COULEURS["MARRON"]:
-            etat_couleurs[i]["rouge"] = True
-            etat_couleurs[i]["jaune"] = True
-            etat_couleurs[i]["bleu"] = True
+        message = str(message).replace("'", '"')
+        message = str(message).replace(" ", "") # Supprime les espaces pour réduire la taille du message à envoyer via I2C, ce qui peut être important si on a une limite de taille de message à respecter
 
-selection_strip = 0  # Variable pour suivre la sélection actuelle (0 à 4)
-selection_strip_flash = selection_strip  # Doit être égale à selection_strip, quand la couleur de cette strip est changée une fois, on la met à -1 pour arrêter le flash, et on la remet à selection_strip lorsqu'une nouvelle strip est sélectionnée
-couleurs_strip = COULEURS_DEPART.copy()  # Initialisation des couleurs du strip avec les couleurs de départ
-
-nb_bonnes_strips = 0 # Variable pour compter le nombre de strips qui sont dans la bonne couleur cible, utilisée pour vérifier si l'énigme est résolue
-
-def lancer_enigme():
-    message = formatToESPCommande() # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
-    logger.debug(f"[lancer_enigme] Message initial à envoyer via I2C : {message}")
-    I2C_handler.sendI2C(message) # Envoie le message formaté à l'ESP32 pour initialiser les couleurs des strips et la sélection
-
-def formatToESPCommande():
-    # Format du message à envoyer via I2C : {"E":2,"Selected":0,"S0":"#FF0000","S1":"#00FF00","S2":"#0000FF","S3":"#FFFF00","S4":"#00FFFF"}
-    #  - E : numéro de l'énigme (pour vérification)
-    #  - Selected : numéro du strip sélectionné (0 à 4) ou -1 si aucun strip n'est sélectionné
-    message = "{\"E\":" + str(NUM_ENIGME) + ",\"Selected\":" + str(selection_strip_flash) + "," + ",".join(f'"S{i}":{c}' for i, c in enumerate(couleurs_strip)) + "}"
-    logger.debug(f"[formatToESPCommande] Message formaté à envoyer via I2C : {message}")
-    return message
-
-def traiter_changement_boutons():
-    if button_values[0] == False and last_button_values[0] == True:
-        selection_strip = (selection_strip - 1) % NB_STRIPS
-        selection_strip_flash = selection_strip
-        logger.debug(f"Strip sélectionné : {selection_strip}")
-
-    if button_values[1] == False and last_button_values[1] == True:
-        selection_strip = (selection_strip + 1) % NB_STRIPS
-        selection_strip_flash = selection_strip
-        logger.debug(f"Strip sélectionné : {selection_strip}")
-
-    if button_values[2] == False and last_button_values[2] == True:
-        etat_couleurs[selection_strip]["rouge"] = not etat_couleurs[selection_strip]["rouge"] # Inverse l'état de la couleur rouge pour la strip sélectionnée
-        selection_strip_flash = -1 # Arrête le flash de la strip sélectionnée lorsque la couleur est changée
-        logger.debug(f"Couleur rouge pour la strip {selection_strip} est maintenant {'activée' if etat_couleurs[selection_strip]['rouge'] else 'désactivée'}")
-
-    if button_values[3] == False and last_button_values[3] == True:
-        if MODE_MELANGE == 'SOUSTRACTIF':
-            etat_couleurs[selection_strip]["jaune"] = not etat_couleurs[selection_strip]["jaune"] # Inverse l'état de la couleur jaune pour la strip sélectionnée
-            selection_strip_flash = -1 # Arrête le flash de la strip sélectionnée lorsque la couleur est changée
-            logger.debug(f"Couleur jaune pour la strip {selection_strip} est maintenant {'activée' if etat_couleurs[selection_strip]['jaune'] else 'désactivée'}")
-        elif MODE_MELANGE == 'ADDITIF':
-            etat_couleurs[selection_strip]["vert"] = not etat_couleurs[selection_strip]["vert"] # Inverse l'état de la couleur verte pour la strip sélectionnée
-            selection_strip_flash = -1 # Arrête le flash de la strip sélectionnée lorsque la couleur est changée
-            logger.debug(f"Couleur verte pour la strip {selection_strip} est maintenant {'activée' if etat_couleurs[selection_strip]['vert'] else 'désactivée'}")
-
-    if button_values[4] == False and last_button_values[4] == True:
-        etat_couleurs[selection_strip]["bleu"] = not etat_couleurs[selection_strip]["bleu"] # Inverse l'état de la couleur bleu pour la strip sélectionnée
-        selection_strip_flash = -1 # Arrête le flash de la strip sélectionnée lorsque la couleur est changée
-        logger.debug(f"Couleur bleu pour la strip {selection_strip} est maintenant {'activée' if etat_couleurs[selection_strip]['bleu'] else 'désactivée'}")
-
-def traiter_changement_couleurs():
-    if MODE_MELANGE == 'ADDITIF':
-        for i in range(NB_STRIPS):
-            couleurs_strip[i] = melange_additif()
-    elif MODE_MELANGE == 'SOUSTRACTIF':
-        for i in range(NB_STRIPS):
-            couleurs_strip[i] = melange_soustractif()
-
-def melange_additif():
-    r = 255 if etat_couleurs[selection_strip]["rouge"] else 0
-    g = 255 if etat_couleurs[selection_strip]["vert"] else 0
-    b = 255 if etat_couleurs[selection_strip]["bleu"] else 0
-    return f"#{r:02x}{g:02x}{b:02x}"
-
-def melange_soustractif():
-    if etat_couleurs[selection_strip]["rouge"] and etat_couleurs[selection_strip]["jaune"] and etat_couleurs[selection_strip]["bleu"]:
-        return ALL_COULEURS["MARRON"]
-    elif etat_couleurs[selection_strip]["rouge"] and etat_couleurs[selection_strip]["jaune"]:
-        return ALL_COULEURS["ORANGE"]
-    elif etat_couleurs[selection_strip]["jaune"] and etat_couleurs[selection_strip]["bleu"]:
-        return ALL_COULEURS["VERT"]
-    elif etat_couleurs[selection_strip]["rouge"] and etat_couleurs[selection_strip]["bleu"]:
-        return ALL_COULEURS["VIOLET"]
-    elif etat_couleurs[selection_strip]["rouge"]:
-        return ALL_COULEURS["ROUGE"]
-    elif etat_couleurs[selection_strip]["jaune"]:
-        return ALL_COULEURS["JAUNE"]
-    elif etat_couleurs[selection_strip]["bleu"]:
-        return ALL_COULEURS["BLEU"]
-    else:
-        return COULEUR_PAR_DEFAUT
+        logger.debug(f"[formatToESPCommande] Message formaté à envoyer via I2C : {message}")
+        return message
     
-def gagne():
-    """
-    Fonction à appeler lorsque le joueur gagne l'énigme.
-    Fait ce qu'on veut faire lorsqu'on gagne, par exemple déclencher une animation de victoire sur les bandes LED, ouvrir une porte, etc.
-    """
+    def traiterBoutons(self):
+        changement = False # Variable pour indiquer s'il y a eu un changement d'état des boutons, peut être utilisée pour optimiser l'envoi de la configuration à l'ESP en n'envoyant que lorsqu'il y a un changement
 
-try:
-    lancer_enigme()
+        if self.boutons_values[0] == False and self.last_boutons_values[0] == True: # Si le bouton 1 est appuyé
+            last_strip_selectionnee = self.strip_selectionnee # Stocke la strip sélectionnée avant de la modifier pour indiquer au joueur quelle strip configurer ensuite
+            self.strip_selectionnee = (self.strip_selectionnee - 1) % NB_STRIPS # On sélectionne la strip précédente (en boucle)
+            while self.bonnes_strips[self.strip_selectionnee] and last_strip_selectionnee != self.strip_selectionnee: # Si la strip précédente est déjà correcte, on continue de reculer jusqu'à trouver une strip qui n'est pas encore correcte pour l'indiquer au joueur, ou revenir à la dernière strip si toutes les strips sont correctes
+                self.strip_selectionnee = (self.strip_selectionnee - 1) % NB_STRIPS
+            self.strip_selectionnee_flash = self.strip_selectionnee # On met à jour la strip sélectionnée pour le flash
+            changement = True
+            logger.debug(f"[traiterBoutons] Bouton 1 appuyé : strip sélectionnée = {self.strip_selectionnee}")
+        if self.boutons_values[1] == False and self.last_boutons_values[1] == True: # Si le bouton 2 est appuyé
+            self.strip_selectionnee = (self.strip_selectionnee + 1) % NB_STRIPS # On sélectionne la strip suivante (en boucle)
+            self.strip_selectionnee_flash = self.strip_selectionnee # On met à jour la strip sélectionnée pour le flash
+            changement = True
+            logger.debug(f"[traiterBoutons] Bouton 2 appuyé : strip sélectionnée = {self.strip_selectionnee}")
+        if self.boutons_values[2] == False and self.last_boutons_values[2] == True: # Si le bouton 3
+            self.etat_composantes_par_strip[self.strip_selectionnee]["rouge"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["rouge"] # On inverse l'état de la composante rouge de la strip sélectionnée
+            self.strip_selectionnee_flash = -1 # On désactive le flash de la strip sélectionnée lorsque le joueur appuie sur un bouton pour changer une composante, pour éviter que le flash ne cache la couleur modifiée
+            changement = True
+            logger.debug(f"[traiterBoutons] Bouton 3 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante rouge = {self.etat_composantes_par_strip[self.strip_selectionnee]['rouge']}")
+        if self.boutons_values[3] == False and self.last_boutons_values[3] == True: # Si le bouton 4
+            if MODE_MELANGE == 'ADDITIF':
+                self.etat_composantes_par_strip[self.strip_selectionnee]["vert"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["vert"] # On inverse l'état de la composante vert de la strip sélectionnée
+    
+                logger.debug(f"[traiterBoutons] Bouton 4 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante vert = {self.etat_composantes_par_strip[self.strip_selectionnee]['vert']}")
+            elif MODE_MELANGE == 'SOUSTRACTIF':
+                self.etat_composantes_par_strip[self.strip_selectionnee]["jaune"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["jaune"] # On inverse l'état de la composante jaune de la strip sélectionnée
+                logger.debug(f"[traiterBoutons] Bouton 4 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante jaune = {self.etat_composantes_par_strip[self.strip_selectionnee]['jaune']}")
+            self.strip_selectionnee_flash = -1 # On désactive le flash de la strip sélectionnée lorsque le joueur appuie sur un bouton pour changer une composante, pour éviter que le flash ne cache la couleur modifiée
+            changement = True
+        if self.boutons_values[4] == False and self.last_boutons_values[4] == True: # Si le bouton 5
+            self.etat_composantes_par_strip[self.strip_selectionnee]["bleu"] = not self.etat_composantes_par_strip[self.strip_selectionnee]["bleu"] # On inverse l'état de la composante bleu de la strip sélectionnée
+            self.strip_selectionnee_flash = -1 # On désactive le flash de la strip sélectionnée lorsque le joueur appuie sur un bouton pour changer une composante, pour éviter que le flash ne cache la couleur modifiée
+            changement = True
+            logger.debug(f"[traiterBoutons] Bouton 5 appuyé : strip sélectionnée = {self.strip_selectionnee}, composante bleu = {self.etat_composantes_par_strip[self.strip_selectionnee]['bleu']}")
 
-    while True:
-        button_values_temp = I2C_handler.getI2C() # Lit les valeurs des boutons depuis l'ESP32 via I2C
+        return changement
 
-        if button_values_temp is not None:
-            for i in range(NB_MODULES):
-                if button_values_temp[i] == 1:
-                    button_values[i] = True
-                elif button_values_temp[i] == 0:
-                    button_values[i] = False
-                else:
-                    logger.warning(f"Valeur inattendue pour bouton {i}: {button_values_temp[i]}")
-                    button_values[i] = True # Par défaut, on considère que les boutons sont à True si on reçoit une valeur inattendue
-
-        if button_values != last_button_values:
-            logger.debug(f"Changement détecté dans les valeurs des boutons: {button_values}")
-
-            traiter_changement_boutons() # Traite les changements de boutons pour mettre à jour la sélection et les couleurs
-
-            traiter_changement_couleurs() # Traite les changements de couleurs pour mettre à jour les couleurs des strips
-
-            message = formatToESPCommande() # Formate le message à envoyer à l'ESP32 avec les nouvelles couleurs et la sélection
-            I2C_handler.sendI2C(message) # Envoie le message formaté à l'ESP32 pour mettre à jour les couleurs des strips et la sélection
-
-            nb_bonnes_strips = 0
-
+    def melangeCouleurs(self):
+        if MODE_MELANGE == 'ADDITIF':
             for i in range(NB_STRIPS):
-                if couleurs_strip[i] == COULEURS_CIBLES[i]:
-                    logger.debug(f"Strip {i} est dans la couleur cible {COULEURS_CIBLES[i]}")
-                    nb_bonnes_strips += 1
+                rouge = self.etat_composantes_par_strip[i]["rouge"]
+                vert = self.etat_composantes_par_strip[i]["vert"]
+                bleu = self.etat_composantes_par_strip[i]["bleu"]
+
+                if rouge and vert and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["BLANC"]
+                elif rouge and vert and not bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["JAUNE"]
+                elif rouge and not vert and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["MAGENTA"]
+                elif not rouge and vert and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["CYAN"]
+                elif rouge and not vert and not bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["ROUGE"]
+                elif not rouge and vert and not bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["VERT"]
+                elif not rouge and not vert and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["BLEU"]
                 else:
-                    logger.debug(f"Strip {i} n'est pas dans la couleur cible {COULEURS_CIBLES[i]}, elle est dans la couleur {couleurs_strip[i]}")
+                    self.couleur_par_strips[i] = COULEUR_PAR_DEFAUT
 
-            if nb_bonnes_strips == NB_STRIPS:
-                logger.info("Toutes les strips sont dans la bonne couleur cible, l'énigme est résolue !")
-                gagne()
-                quit()
+        elif MODE_MELANGE == 'SOUSTRACTIF':
+            for i in range(NB_STRIPS):
+                rouge = self.etat_composantes_par_strip[i]["rouge"]
+                jaune = self.etat_composantes_par_strip[i]["jaune"]
+                bleu = self.etat_composantes_par_strip[i]["bleu"]
 
-            last_button_values = button_values.copy()
+                if rouge and jaune and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["NOIR"]
+                elif rouge and jaune and not bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["ORANGE"]
+                elif rouge and not jaune and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["VIOLET"]
+                elif not rouge and jaune and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["VERT"]
+                elif rouge and not jaune and not bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["ROUGE"]
+                elif not rouge and jaune and not bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["JAUNE"]
+                elif not rouge and not jaune and bleu:
+                    self.couleur_par_strips[i] = ALL_COULEURS["BLEU"]
+                else:
+                    self.couleur_par_strips[i] = COULEUR_PAR_DEFAUT
 
+    def verifCorrespondance(self):
+        last_strip_selectionnee = self.strip_selectionnee # Stocke la strip sélectionnée avant de potentiellement la modifier pour indiquer au joueur quelle strip configurer ensuite
 
+        for i in range(NB_STRIPS):
+            if self.couleur_par_strips[i] == COULEURS_CIBLES[i]:
+                self.bonnes_strips[i] = True
+                if self.strip_selectionnee == i and self.bonnes_strips[i] == True:
+                    self.strip_selectionnee = (self.strip_selectionnee + 1) % NB_STRIPS # On sélectionne la strip suivante (en boucle) lorsque le joueur a correctement configuré la strip sélectionnée, pour l'aider à avancer dans l'énigme en lui indiquant quelle strip configurer ensuite
+                    while self.bonnes_strips[self.strip_selectionnee] and last_strip_selectionnee != self.strip_selectionnee: # Si la strip suivante est déjà correcte, on continue d'avancer jusqu'à trouver une strip qui n'est pas encore correcte pour l'indiquer au joueur, ou revenir à la première strip si toutes les strips sont correctes
+                        self.strip_selectionnee = (self.strip_selectionnee + 1) % NB_STRIPS
+            else:
+                self.bonnes_strips[i] = False
+        logger.debug(f"[verifCorrespondance] Nombre de strips correctes : {sum(self.bonnes_strips)} / {NB_STRIPS}")
+        if self.strip_selectionnee != last_strip_selectionnee:
+            self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la nouvelle configuration à l'ESP pour mettre à jour la strip sélectionnée et indiquer au joueur quelle strip configurer ensuite
+        
+        if all(self.bonnes_strips):
+            self.gagne() # Appeler la fonction de victoire lorsque l'énigme est résolue
 
+    def gagne(self):
+        """
+        Fonction à appeler lorsque le joueur gagne l'énigme.
+        Fait ce qu'on veut faire lorsqu'on gagne, par exemple déclencher une animation de victoire sur les bandes LED, ouvrir une porte, etc.
+        """
+        self.gagnee = True
+        logger.info("Enigme résolue ! Toutes les strips ont la bonne couleur.")
+        self.I2C_handler.sendI2C(self.formatToESPCommande(strip_selectionnee=-1)) # Arrêt de la strip sélectionnée pour indiquer que l'énigme est résolue, peut être utilisé par l'ESP pour déclencher une animation de victoire spécifique ou d'autres actions liées à la victoire
+        for i in range(NB_STRIPS):
+            self.couleur_par_strips[i] = ALL_COULEURS["VERT"] # On met toutes les strips en vert pour indiquer la victoire, peut être remplacé par une autre couleur ou une animation spécifique en fonction de ce qu'on veut faire lorsqu'on gagne
+        time.sleep(1) # Petit délai pour laisser comprendre au joueur qu'il a gagné avant de quitter le programme, peut être ajusté selon les besoins
+        self.I2C_handler.sendI2C(self.formatToESPCommande(strip_selectionnee=-1)) # Envoi de la configuration finale à l'ESP avec strip_selectionnee à -1 pour indiquer que l'énigme est résolue, peut être utilisé par l'ESP pour déclencher une animation de victoire spécifique ou d'autres actions liées à la victoire
+        quit() # Quitter le programme après la victoire, peut être remplacé par une boucle d'attente ou d'autres actions si on ne veut pas quitter immédiatement après la victoire
 
-except Exception as e:
-    logger.error(f"Erreur lors du démarrage de l'énigme : {e}")
-    quit()
+    def close(self):
+        self.I2C_handler.close()
+
+    def play(self):
+        if not self.gagnee:
+            self.boutons_values_temp = self.I2C_handler.decodeJSON(self.I2C_handler.getI2C())
+
+            if self.boutons_values_temp is not None:
+                for i in range(NB_MODULES):
+                    if self.boutons_values_temp[i] == 1:
+                        self.boutons_values[i] = True
+                    elif self.boutons_values_temp[i] == 0:
+                        self.boutons_values[i] = False
+                    else:
+                        self.boutons_values[i] = True # Valeur par défaut en cas d'erreur de décodage, pour éviter d'avoir None dans les valeurs des boutons
+                        logger.warning(f"Valeur inattendue pour le bouton {i} : {self.boutons_values_temp[i]}. Valeur par défaut (True) utilisée.")
+            
+            if self.boutons_values != self.last_boutons_values:
+                logger.debug(f"Modification des boutons détectée : {self.boutons_values}")
+
+                if self.traiterBoutons(): # Si il y a eu un changement d'état des boutons qui a été traité (par exemple changement de strip sélectionnée ou changement d'une composante de couleur)
+                    self.melangeCouleurs()
+
+                    self.I2C_handler.sendI2C(self.formatToESPCommande()) # Envoi de la nouvelle configuration à l'ESP à chaque changement de bouton pour que les LEDs soient mises à jour en temps réel
+
+                    self.verifCorrespondance() # Vérification de la correspondance entre les couleurs actuelles et les couleurs cibles à chaque changement de bouton pour vérifier si le joueur a résolu l'énigme
+
+                self.last_boutons_values = self.boutons_values.copy()
+
+# bouton = Bouton()
+# bouton.start()
+
+# print("Depasse instance")
+
+# try:
+#     while True:
+#         bouton.play()
+#         time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
+
+# except Exception as e:
+#     logger.error(f"Erreur inattendue dans le programme principal: {e}")
+
+# except KeyboardInterrupt:
+#     logger.info("Programme interrompu par l'utilisateur.")
+
+# finally:
+#     bouton.close()

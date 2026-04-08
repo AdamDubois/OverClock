@@ -59,7 +59,7 @@ class I2C:
             # Prétraitement : ajouter des guillemets autour des clés si absent
             # Ajoute des guillemets autour des clés non entourées
             json_str_corrige = re.sub(r'([a-zA-Z0-9_]+):', r'"\1":', json_str)
-            #logger.debug(f"JSON corrigé pour décodage: {json_str_corrige}")
+            logger.debug(f"JSON corrigé pour décodage: {json_str_corrige}")
 
             data = json.loads(json_str_corrige)
             # Extraire les valeurs des readers
