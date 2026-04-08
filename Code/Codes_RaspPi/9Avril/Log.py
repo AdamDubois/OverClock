@@ -23,7 +23,7 @@ __status__ = "Production"
 
 
 import logging
-from .Config import DEBUG_MODE
+DEBUG_MODE = True  # Cette variable devrait idéalement être importée depuis Config.py
 
 # Configuration du logging
 logging.basicConfig(
