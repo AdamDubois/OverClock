@@ -8,11 +8,28 @@ class Switchs:
         self.valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()
         self.I2C_handler = I2C()
         self.termine = False
+        self.sequence_initiale_validee = False
 
         self.switch_values = [False] * NB_MODULES  # Valeurs actuelles des switchs
         self.last_switch_values = [False] * NB_MODULES  # Valeurs des switch
         self.switch_values_temp = [False] * NB_MODULES  # Valeurs temporaires des switchs pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
         self.num_sequence = 0  # Numéro de la séquence actuelle
+
+    def _valider_sequence_courante(self):
+        self.sequence_correcte(self.num_sequence)
+
+        if self.num_sequence >= len(SEQUENCE_ATTENDUE):
+            self.terminer_enigme()
+            self.gagne()
+            return
+
+        for i in range(4):
+            if i == SEQUENCE_ATTENDUE[self.num_sequence]:
+                self.valeur_sequence_attendue[i] = not self.valeur_sequence_attendue[i]
+                self.num_sequence += 1
+                break
+
+        logger.debug(f"Nouvelle séquence attendu : {self.valeur_sequence_attendue}")
 
     def test_sequence(self, valeur_sequence_attendue=None):
         """
@@ -57,6 +74,10 @@ class Switchs:
             if not self.test_sequence():
                 logger.error("[lancer_enigme] Vérification de séquence invalide, annulation du lancement.")
                 return False
+
+            self.sequence_initiale_validee = False
+            self.num_sequence = 0
+            self.valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()
 
             message = "{\"E\":" + str(NUM_ENIGME) + ",\"Etape\":" + str(MSG_LED_TOUT_ROUGE) + "}"
             self.I2C_handler.sendI2C(message) # Mettre toutes les DELs en rouge pour indiquer que l'énigme est lancée
@@ -125,6 +146,16 @@ class Switchs:
                         logger.warning(f"Valeur inattendue pour switch {i}: {self.switch_values_temp[i]}")
                         self.switch_values[i] = True # Par défaut, on considère que les switchs sont à True si on reçoit une valeur inattendue
 
+            # L'état initial doit allumer la 1re DEL même sans transition détectée.
+            if (not self.sequence_initiale_validee and
+                self.num_sequence == 0 and
+                self.switch_values == self.valeur_sequence_attendue):
+                self.sequence_initiale_validee = True
+                self._valider_sequence_courante()
+                self.last_switch_values = self.switch_values.copy()
+                time.sleep(0.01)
+                return
+
             if self.switch_values != self.last_switch_values:
                 self.last_switch_values = self.switch_values.copy()
 
@@ -132,26 +163,14 @@ class Switchs:
                 logger.debug(f"Sequence attendu : {self.valeur_sequence_attendue}")
 
                 if self.switch_values == self.valeur_sequence_attendue:
-                    self.sequence_correcte(self.num_sequence)
-
-                    if self.num_sequence >= len(SEQUENCE_ATTENDUE):
-                        self.terminer_enigme()
-                        self.gagne()
-
-                    else:
-                        logger.debug(f"DEBUG num sequence : {self.num_sequence}")
-                        for i in range(4):
-                            if i == SEQUENCE_ATTENDUE[self.num_sequence]:
-                                self.valeur_sequence_attendue[i] = not self.valeur_sequence_attendue[i]
-                                self.num_sequence += 1
-                                break
-
-                    logger.debug(f"Nouvelle séquence attendu : {self.valeur_sequence_attendue}")
+                    self.sequence_initiale_validee = True
+                    self._valider_sequence_courante()
 
                 elif self.num_sequence > 0: # Si la séquence n'est pas correcte et que ce n'est pas la première étape de la séquence (num_sequence == 0), alors c'est que le joueur a fait une erreur dans la séquence, on affiche un message d'erreur et on réinitialise la séquence attendue pour recommencer depuis le début
                     self.mauvaise_sequence()
 
                     self.num_sequence = 0
+                    self.sequence_initiale_validee = False
                     self.valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
 
                     switch_values_temp = self.I2C_handler.decodeJSON(self.I2C_handler.getI2C())
