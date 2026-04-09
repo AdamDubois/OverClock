@@ -12,39 +12,47 @@ print(f"1. Lancement de l'interface: {MAIN_UI}")
 print(f"2. Lancement du jeu: {MAIN_GAME}")
 print()
 
+ui_process = None
+game_process = None
+boucle = 0
+
 try:
-    # Lancer l'interface graphique
+    # Lancer l'interface graphique une seule fois
     print("Lancement de l'interface graphique...")
     ui_process = subprocess.Popen([sys.executable, MAIN_UI])
-    
+
     # Attendre un peu pour que l'interface se charge
     time.sleep(3)
-    
-    # Lancer le jeu
-    print("Lancement du jeu...")
-    game_process = subprocess.Popen([sys.executable, MAIN_GAME])
-    
-    # Attendre la fin des deux processus
-    print("Les deux processus sont en cours d'exécution...")
-    print("(Utilisez Ctrl+C pour arrêter)")
-    print()
-    
-    ui_process.wait()
-    game_process.terminate()
-    game_process.wait(timeout=5)
-    
+
+    while True:
+        boucle += 1
+        print(f"\n=== BOUCLE {boucle} ===\n")
+
+        # Lancer le jeu
+        print("Lancement du jeu...")
+        game_process = subprocess.Popen([sys.executable, MAIN_GAME])
+
+        print("En cours d'exécution... (Utilisez Ctrl+C pour arrêter)")
+
+        game_process.wait()
+
+        print(f"\nJeu terminé. Redémarrage...\n")
+        time.sleep(2)
+
 except KeyboardInterrupt:
     print("\n\nArrêt du launcher...")
-    try:
-        game_process.terminate()
-        game_process.wait(timeout=5)
-    except:
-        game_process.kill()
-    try:
-        ui_process.terminate()
-        ui_process.wait(timeout=5)
-    except:
-        ui_process.kill()
+    if game_process is not None:
+        try:
+            game_process.terminate()
+            game_process.wait(timeout=5)
+        except Exception:
+            game_process.kill()
+    if ui_process is not None:
+        try:
+            ui_process.terminate()
+            ui_process.wait(timeout=5)
+        except Exception:
+            ui_process.kill()
     print("Processus arrêtés.")
 except Exception as e:
     print(f"Erreur: {e}")

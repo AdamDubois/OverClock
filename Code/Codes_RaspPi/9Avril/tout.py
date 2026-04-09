@@ -60,7 +60,7 @@ try:
     ui_message["game_start"] = True
     ui_message["enigme"] = 1
     send_state()
-    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+    time.sleep(2) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
     from RFID.RFID import RFID
     rfid = RFID()
     while not rfid.fini:
@@ -73,7 +73,7 @@ try:
 
     ui_message["enigme"] = 2
     send_state()
-    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+    time.sleep(2) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
     from Bouton.EnigmeBouton import Bouton
     bouton = Bouton()
     bouton.start()
@@ -82,7 +82,7 @@ try:
 
     ui_message["enigme"] = 3
     send_state()
-    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+    time.sleep(2) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
     from Switchs.Switchs import Switchs
     switchs = Switchs()
     switchs.lancer_enigme()
