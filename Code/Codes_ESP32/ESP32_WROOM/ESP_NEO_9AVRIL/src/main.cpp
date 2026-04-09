@@ -202,7 +202,11 @@ void loop()
     case 11: // 9ème DEL en vert
       ledsE2[16] = CRGB::Green; // Allumer la dix-septième colonne de LEDs en vert
       FastLED.show();
-
+      break;
+      
+    case 12: // Éteindre toutes les DELs
+      fill_Enigme2(CRGB::Black); // Éteindre les LEDs paires
+      FastLED.show();
       break;
 
     default:

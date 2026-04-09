@@ -1,5 +1,5 @@
-from Config import I2C_BUS_NUMBER, ADDR_ESP_DEMANDE, NB_MODULES, NOM_ESP_DEMANDE, VALEUR_CLE, TEMPS_ATTENTE_ERREUR
-from Log import logger
+from .Config import I2C_BUS_NUMBER, ADDR_ESP_DEMANDE, NB_MODULES, NOM_ESP_DEMANDE, VALEUR_CLE, TEMPS_ATTENTE_ERREUR
+from .Log import logger
 from smbus2 import SMBus, i2c_msg      # Pour l'I2C (sudo pip install smbus2)
 import time
 import json
@@ -59,7 +59,7 @@ class I2C:
             # Prétraitement : ajouter des guillemets autour des clés si absent
             # Ajoute des guillemets autour des clés non entourées
             json_str_corrige = re.sub(r'([a-zA-Z0-9_]+):', r'"\1":', json_str)
-            logger.debug(f"JSON corrigé pour décodage: {json_str_corrige}")
+            # logger.debug(f"JSON corrigé pour décodage: {json_str_corrige}")
 
             data = json.loads(json_str_corrige)
             # Extraire les valeurs des readers

@@ -1,6 +1,6 @@
-from Config import *
-from I2C_handler import I2C
-from Log import logger
+from .Config import *
+from .I2C_handler import I2C
+from .Log import logger
 import time
 
 class Bouton:
@@ -203,8 +203,7 @@ class Bouton:
             self.couleur_par_strips[i] = ALL_COULEURS["VERT"] # On met toutes les strips en vert pour indiquer la victoire, peut être remplacé par une autre couleur ou une animation spécifique en fonction de ce qu'on veut faire lorsqu'on gagne
         time.sleep(1) # Petit délai pour laisser comprendre au joueur qu'il a gagné avant de quitter le programme, peut être ajusté selon les besoins
         self.I2C_handler.sendI2C(self.formatToESPCommande(strip_selectionnee=-1)) # Envoi de la configuration finale à l'ESP avec strip_selectionnee à -1 pour indiquer que l'énigme est résolue, peut être utilisé par l'ESP pour déclencher une animation de victoire spécifique ou d'autres actions liées à la victoire
-        quit() # Quitter le programme après la victoire, peut être remplacé par une boucle d'attente ou d'autres actions si on ne veut pas quitter immédiatement après la victoire
-
+        
     def close(self):
         self.I2C_handler.close()
 
