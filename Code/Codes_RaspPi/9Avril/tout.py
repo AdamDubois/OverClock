@@ -1,5 +1,12 @@
 from Log import logger
 from smbus2 import SMBus, i2c_msg
+import socket
+
+ui_message = str{{
+    "game_start" : False,
+    "enigme" : 0,
+    "rfid" : [False, False, False, False],
+}}
 
 message = str({"E":1,"Selected":-1,"S0":"#000000","S1":"#000000","S2":"#000000","S3":"#000000","S4":"#000000"}) 
 data = [ord(c) for c in message]
@@ -23,6 +30,9 @@ except Exception as e:
 
 bus.close()
 
+rfid = None
+bouton = None
+switchs = None
 
 
 try:

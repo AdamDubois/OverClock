@@ -13,7 +13,6 @@ class Switchs:
         self.last_switch_values = [False] * NB_MODULES  # Valeurs des switch
         self.switch_values_temp = [False] * NB_MODULES  # Valeurs temporaires des switchs pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
         self.num_sequence = 0  # Numéro de la séquence actuelle
-        self.switch_values_attendues = VALEUR_SWITCHES_INIT.copy()  # Valeurs des switchs attendues pour la séquence actuelle, initialisées à la valeur de départ
 
     def test_sequence(self, valeur_sequence_attendue=VALEUR_SWITCHES_INIT.copy()):
         """
@@ -105,7 +104,7 @@ class Switchs:
         self.termine = True
     
     def close(self):
-        self.I2C_handler.bus.close()
+        self.I2C_handler.close()
 
     def main(self):
         try:
@@ -118,16 +117,16 @@ class Switchs:
                     elif self.switch_values_temp[i] == 0:
                         self.switch_values[i] = False
                     else:
-                        logger.warning(f"[main] Valeur inattendue pour le switch {i} : {self.switch_values_temp[i]} (attendu 0 ou 1)")
-                        self.switch_values[i] = False # Par défaut, on considère que le switch est off en cas de valeur inattendue
+                        logger.warning(f"Valeur inattendue pour switch {i}: {self.switch_values_temp[i]}")
+                        self.switch_values[i] = True # Par défaut, on considère que les switchs sont à True si on reçoit une valeur inattendue
 
             if self.switch_values != self.last_switch_values:
                 self.last_switch_values = self.switch_values.copy()
 
                 logger.debug(f"Modification des switchs détectée : {self.switch_values}")
-                logger.debug(f"Sequence attendu : {self.switch_values_attendues}")
+                logger.debug(f"Sequence attendu : {self.valeur_sequence_attendue}")
 
-                if self.switch_values == self.switch_values_attendues:
+                if self.switch_values == self.valeur_sequence_attendue:
                     self.sequence_correcte(self.num_sequence)
 
                     if self.num_sequence >= len(SEQUENCE_ATTENDUE):
@@ -165,6 +164,8 @@ class Switchs:
                             self.last_switch_values = self.switch_values.copy() # Mettre à jour last_switch_values pour éviter de détecter une modification dès le début si les switchs sont déjà à la position de départ après une mauvaise séquence
                         else:
                             self.last_switch_values = [False] * NB_MODULES # Si on ne peut pas décoder les valeurs des switchs, on réinitialise last_switch_values pour éviter de détecter une modification dès le début
+
+            time.sleep(0.01) # Petit delay pour éviter de surcharger le CPU, peut être ajusté selon les besoins
             
         except Exception as e:
             logger.error(f"Erreur inattendue dans le programme principal: {e}")
