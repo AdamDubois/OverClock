@@ -1,12 +1,33 @@
+import time
+
 from Log import logger
 from smbus2 import SMBus, i2c_msg
 import socket
+import json
 
-ui_message = str{{
-    "game_start" : False,
-    "enigme" : 0,
-    "rfid" : [False, False, False, False],
-}}
+ui_message = {
+"game_start": False,
+"enigme": 0,
+"rfid": [False, False, False, False],
+}
+
+HOST = "127.0.0.1"
+PORT = 5000
+
+def send_state():
+    message = str(ui_message)
+ 
+    data = json.dumps(ui_message) + "\n"
+    print (f"Message à envoyer : {message}")
+ 
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((HOST, PORT))
+        client.sendall(data.encode("utf-8"))
+        client.close()
+        print(f"Envoyé -> {message}")
+    except Exception as e:
+        print("Erreur :", e)
 
 message = str({"E":1,"Selected":-1,"S0":"#000000","S1":"#000000","S2":"#000000","S3":"#000000","S4":"#000000"}) 
 data = [ord(c) for c in message]
@@ -36,24 +57,40 @@ switchs = None
 
 
 try:
+    ui_message["game_start"] = True
+    ui_message["enigme"] = 1
+    send_state()
+    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
     from RFID.RFID import RFID
     rfid = RFID()
     while not rfid.fini:
+        last_readers_values = rfid.last_readers_values.copy()
         rfid.play()
+        if rfid.readers_values != last_readers_values:
+            ui_message["rfid"] = rfid.bonnes_cartes.copy()
+            send_state()
 
+
+    ui_message["enigme"] = 2
+    send_state()
+    time.sleep(5) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
     from Bouton.EnigmeBouton import Bouton
     bouton = Bouton()
     bouton.start()
-
     while not bouton.gagnee:
         bouton.play()
 
+    ui_message["enigme"] = 3
+    send_state()
+    time.sleep(5) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
     from Switchs.Switchs import Switchs
     switchs = Switchs()
     switchs.lancer_enigme()
-
     while not switchs.termine:
         switchs.main()
+
+    ui_message["enigme"] = 4
+    send_state()
 
 except Exception as e:
     logger.error(f"Erreur inattendue dans le programme principal: {e}")

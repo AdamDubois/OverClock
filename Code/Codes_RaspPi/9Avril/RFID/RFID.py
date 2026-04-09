@@ -10,6 +10,7 @@ class RFID:
         self.readers_values = [None] * NB_MODULES  # Valeurs actuelles des switchs
         self.last_readers_values = [None] * NB_MODULES  # Valeurs des switchs lors de la dernière vérification
         self.readers_values_temp = [None] * NB_MODULES  # Valeurs temporaires des switchs pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
+        self.bonnes_cartes = [False] * NB_MODULES  # Indique si chaque carte est dans la bonne position ou pas
         self.nb_bonnes_cartes = 0
         self.fini = False
 
@@ -41,6 +42,9 @@ class RFID:
                         logger.debug(f"Reader {i} : {self.readers_values[i]} (Attendu : {SOLUTION_READER[i]})")
                         if self.readers_values[i] == SOLUTION_READER[i]:
                             self.nb_bonnes_cartes += 1
+                            self.bonnes_cartes[i] = True
+                        else:
+                            self.bonnes_cartes[i] = False
                     else:
                         logger.debug(f"Reader {i} : None (Attendu : {SOLUTION_READER[i]})")
                 
