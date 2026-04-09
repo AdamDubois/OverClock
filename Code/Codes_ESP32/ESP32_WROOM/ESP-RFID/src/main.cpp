@@ -130,6 +130,9 @@ void initSPI()
   for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) { // Initialisation de chaque lecteur MFRC522
     mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN); // Utilise la signature compatible
     
+    // Réduire la puissance d'émission (0x00 = max, 0x3F = min)
+    mfrc522[reader].PCD_WriteRegister(MFRC522::CWGsPReg, 0x20); // Valeur à ajuster
+    
     if (DEBUG_MODE)
     {
       Serial.print(F("[DEBUG] Reader "));

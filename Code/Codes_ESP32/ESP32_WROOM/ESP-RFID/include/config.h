@@ -106,6 +106,7 @@ const String ESP32_NAME = "RFID";
 // ===============================================================================================================
 #define NR_OF_READERS 4 // Nombre de lecteurs RFID connectés (doit correspondre au nombre de broches SS définies)
 
+// Le SS 1 et 2 ont été changé pour une raison physique, les fils du connecteur 2 n'était pas assez long. Les deux ont été interchangé.
 #define SS_1_PIN    3
 #define SS_2_PIN    1
 #define SS_3_PIN    20
