@@ -12,6 +12,8 @@ try:
 except Exception as e:
     logger.error(f"[I2C_handle : sendI2C] Erreur d'écriture I2C: {e}")
 
+message
+
 bus.close()
 
 
@@ -29,10 +31,21 @@ try:
     while not bouton.gagnee:
         bouton.play()
 
+    from Switchs.Switchs import Switchs
+    switchs = Switchs()
+    switchs.lancer_enigme()
+
+    while not switchs.termine:
+        switchs.main()
+
 except Exception as e:
     logger.error(f"Erreur inattendue dans le programme principal: {e}")
 except KeyboardInterrupt:
     logger.info("Programme interrompu par l'utilisateur.")
 finally:
-    rfid.close()
-    bouton.close()
+    if rfid is not None:
+        rfid.close()
+    if bouton is not None:
+        bouton.close()
+    if switchs is not None:
+        switchs.close()
