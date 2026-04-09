@@ -57,6 +57,7 @@ switchs = None
 
 
 try:
+    input("Appuyez sur Entrée pour démarrer le jeu...")
     ui_message["game_start"] = True
     ui_message["enigme"] = 1
     send_state()
@@ -67,7 +68,13 @@ try:
         last_readers_values = rfid.last_readers_values.copy()
         rfid.play()
         if rfid.readers_values != last_readers_values:
-            ui_message["rfid"] = rfid.bonnes_cartes.copy()
+            for i in range(4):
+                if i != 0 and i != 1:
+                    ui_message["rfid"][i] = rfid.bonnes_cartes[i]
+                elif i == 0:
+                    ui_message["rfid"][i+1] = rfid.bonnes_cartes[i]
+                elif i == 1:
+                    ui_message["rfid"][i-1] = rfid.bonnes_cartes[i]
             send_state()
 
 
@@ -90,6 +97,10 @@ try:
         switchs.main()
 
     ui_message["enigme"] = 4
+    send_state()
+    time.sleep(5) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+
+    ui_message["game_start"] = False
     send_state()
 
 except Exception as e:
