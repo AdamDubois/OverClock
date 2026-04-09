@@ -15,6 +15,25 @@ class Switchs:
         self.switch_values_temp = [False] * NB_MODULES  # Valeurs temporaires des switchs pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
         self.num_sequence = 0  # Numéro de la séquence actuelle
 
+    def _etat_apres_n_toggles(self, n_toggles):
+        etat = VALEUR_SWITCHES_INIT.copy()
+        for idx in range(min(n_toggles, len(SEQUENCE_ATTENDUE))):
+            switch_idx = SEQUENCE_ATTENDUE[idx]
+            etat[switch_idx] = not etat[switch_idx]
+        return etat
+
+    def _trouver_index_etat(self, etat_courant):
+        etat_reference = VALEUR_SWITCHES_INIT.copy()
+        if etat_courant == etat_reference:
+            return 0
+
+        for idx, switch_idx in enumerate(SEQUENCE_ATTENDUE, start=1):
+            etat_reference[switch_idx] = not etat_reference[switch_idx]
+            if etat_courant == etat_reference:
+                return idx
+
+        return None
+
     def _valider_sequence_courante(self):
         self.sequence_correcte(self.num_sequence)
 
@@ -29,6 +48,17 @@ class Switchs:
                 self.num_sequence += 1
                 break
 
+        logger.debug(f"Nouvelle séquence attendu : {self.valeur_sequence_attendue}")
+
+    def _initialiser_depuis_etat_initial(self):
+        # L'état initial correspond à la 1re DEL allumée.
+        self.sequence_initiale_validee = True
+        self.sequence_correcte(0)
+
+        self.valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()
+        premiere_action = SEQUENCE_ATTENDUE[0]
+        self.valeur_sequence_attendue[premiere_action] = not self.valeur_sequence_attendue[premiere_action]
+        self.num_sequence = 1
         logger.debug(f"Nouvelle séquence attendu : {self.valeur_sequence_attendue}")
 
     def test_sequence(self, valeur_sequence_attendue=None):
@@ -81,6 +111,9 @@ class Switchs:
 
             message = "{\"E\":" + str(NUM_ENIGME) + ",\"Etape\":" + str(MSG_LED_TOUT_ROUGE) + "}"
             self.I2C_handler.sendI2C(message) # Mettre toutes les DELs en rouge pour indiquer que l'énigme est lancée
+            # Sécurise le changement de mode côté ESP en renvoyant l'étape initiale.
+            time.sleep(0.05)
+            self.I2C_handler.sendI2C(message)
             return True
             
         except Exception as e:
@@ -110,6 +143,10 @@ class Switchs:
         message = "{\"E\":" + str(NUM_ENIGME) + ",\"Etape\":" + str(MSG_LED_VERT[index_sequence]) + "}"
 
         self.I2C_handler.sendI2C(message) # Message pour allumer la bonne DEL en vert en fonction de l'étape de la séquence
+        # Une trame peut être ignorée pendant les transitions d'énigmes : on renvoie
+        # chaque étape pour garantir l'alignement visuel des DELs.
+        time.sleep(0.03)
+        self.I2C_handler.sendI2C(message)
 
     def terminer_enigme(self):
         """
@@ -135,24 +172,27 @@ class Switchs:
     def main(self):
         try:
             self.switch_values_temp = self.I2C_handler.decodeJSON(self.I2C_handler.getI2C())
+            valid_read = self.switch_values_temp is not None
 
-            if self.switch_values_temp is not None:
-                for i in range(NB_MODULES):
-                    if self.switch_values_temp[i] == 1:
-                        self.switch_values[i] = True
-                    elif self.switch_values_temp[i] == 0:
-                        self.switch_values[i] = False
-                    else:
-                        logger.warning(f"Valeur inattendue pour switch {i}: {self.switch_values_temp[i]}")
-                        self.switch_values[i] = True # Par défaut, on considère que les switchs sont à True si on reçoit une valeur inattendue
+            if not valid_read:
+                time.sleep(0.01)
+                return
 
-            # L'état initial doit allumer la 1re DEL même sans transition détectée.
-            if (not self.sequence_initiale_validee and
-                self.num_sequence == 0 and
-                self.switch_values == self.valeur_sequence_attendue):
-                self.sequence_initiale_validee = True
-                self._valider_sequence_courante()
+            for i in range(NB_MODULES):
+                if self.switch_values_temp[i] == 1:
+                    self.switch_values[i] = True
+                elif self.switch_values_temp[i] == 0:
+                    self.switch_values[i] = False
+                else:
+                    logger.warning(f"Valeur inattendue pour switch {i}: {self.switch_values_temp[i]}")
+                    self.switch_values[i] = True # Par défaut, on considère que les switchs sont à True si on reçoit une valeur inattendue
+
+            # Tant que l'état initial n'a pas été validé, on attend l'état exact de départ,
+            # puis on prépare immédiatement la première vraie étape de la séquence.
+            if not self.sequence_initiale_validee and self.num_sequence == 0:
                 self.last_switch_values = self.switch_values.copy()
+                if self.switch_values == VALEUR_SWITCHES_INIT:
+                    self._initialiser_depuis_etat_initial()
                 time.sleep(0.01)
                 return
 

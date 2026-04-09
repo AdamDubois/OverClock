@@ -192,13 +192,14 @@ def main():
                     apply_step(current_step)
                     bouton.close()
                     bouton = None
-                time.sleep(LOOP_SLEEP_SECONDS)
+                #time.sleep(LOOP_SLEEP_SECONDS)
                 continue
 
             if current_step == 3:
                 if switchs is None:
                     switchs = Switchs()
                     switchs.lancer_enigme()
+                    time.sleep(1)
                 switchs.main()
                 if switchs.termine:
                     current_step = 4
