@@ -55,42 +55,56 @@ rfid = None
 bouton = None
 switchs = None
 
+boucle = 0
 
 try:
-    ui_message["game_start"] = True
-    ui_message["enigme"] = 1
-    send_state()
-    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
-    from RFID.RFID import RFID
-    rfid = RFID()
-    while not rfid.fini:
-        last_readers_values = rfid.last_readers_values.copy()
-        rfid.play()
-        if rfid.readers_values != last_readers_values:
-            ui_message["rfid"] = rfid.bonnes_cartes.copy()
-            send_state()
+    while True:
+        boucle += 1
+        logger.info(f"Démarrage de la boucle {boucle}")
+        print(f"\n=== BOUCLE {boucle} ===\n")
+        
+        ui_message["game_start"] = True
+        ui_message["enigme"] = 1
+        send_state()
+        time.sleep(15) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+        from RFID.RFID import RFID
+        rfid = RFID()
+        while not rfid.fini:
+            last_readers_values = rfid.last_readers_values.copy()
+            rfid.play()
+            if rfid.readers_values != last_readers_values:
+                ui_message["rfid"] = rfid.bonnes_cartes.copy()
+                send_state()
+        rfid.close()
+        rfid = None
 
+        ui_message["enigme"] = 2
+        send_state()
+        time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+        from Bouton.EnigmeBouton import Bouton
+        bouton = Bouton()
+        bouton.start()
+        while not bouton.gagnee:
+            bouton.play()
+        bouton.close()
+        bouton = None
 
-    ui_message["enigme"] = 2
-    send_state()
-    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
-    from Bouton.EnigmeBouton import Bouton
-    bouton = Bouton()
-    bouton.start()
-    while not bouton.gagnee:
-        bouton.play()
+        ui_message["enigme"] = 3
+        send_state()
+        time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
+        from Switchs.Switchs import Switchs
+        switchs = Switchs()
+        switchs.lancer_enigme()
+        while not switchs.termine:
+            switchs.main()
+        switchs.close()
+        switchs = None
 
-    ui_message["enigme"] = 3
-    send_state()
-    time.sleep(10) # Attendre un peu avant de lancer l'énigme pour laisser le temps à l'interface de se mettre à jour
-    from Switchs.Switchs import Switchs
-    switchs = Switchs()
-    switchs.lancer_enigme()
-    while not switchs.termine:
-        switchs.main()
-
-    ui_message["enigme"] = 4
-    send_state()
+        ui_message["enigme"] = 4
+        send_state()
+        
+        print(f"\nBoucle {boucle} terminée. Redémarrage...\n")
+        time.sleep(5)  # Petite pause avant de redémarrer la boucle
 
 except Exception as e:
     logger.error(f"Erreur inattendue dans le programme principal: {e}")

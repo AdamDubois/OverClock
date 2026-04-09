@@ -195,13 +195,13 @@ Rectangle {
 
                 Text {
                     id: text1
-                    x: 307
-                    y: 601
-                    width: 664
+                    x: 344
+                    y: 590
+                    width: 591
                     height: 77
                     color: "#ff0000"
                     text: qsTr("Confirmation de l’identité requise")
-                    font.pixelSize: 45
+                    font.pixelSize: 40
                 }
 
 
@@ -249,6 +249,50 @@ Rectangle {
 
                         color: root.rfidState[3] ? "#3A1A1A" : "#111821"
                     }
+                }
+
+                Text {
+                    id: text3
+                    x: 386
+                    y: 644
+                    width: 55
+                    height: 38
+                    color: "#ff0000"
+                    text: qsTr("1+2")
+                    font.pixelSize: 30
+                }
+
+                Text {
+                    id: text4
+                    x: 537
+                    y: 734
+                    width: 55
+                    height: 38
+                    color: "#ff0000"
+                    text: qsTr("4+5")
+                    font.pixelSize: 30
+                }
+
+                Text {
+                    id: text5
+                    x: 678
+                    y: 638
+                    width: 55
+                    height: 38
+                    color: "#ff0000"
+                    text: qsTr("2x2")
+                    font.pixelSize: 30
+                }
+
+                Text {
+                    id: text6
+                    x: 825
+                    y: 734
+                    width: 55
+                    height: 38
+                    color: "#ff0000"
+                    text: qsTr("7/7")
+                    font.pixelSize: 30
                 }
             }
 
@@ -414,7 +458,7 @@ Rectangle {
 
             Keyframe {
                 value: 1
-                frame: 1040
+                frame: 1037
             }
 
             Keyframe {
@@ -607,7 +651,7 @@ Rectangle {
 
             Keyframe {
                 value: "#ff3b3b"
-                frame: 1041
+                frame: 1037
             }
 
             Keyframe {
@@ -619,20 +663,10 @@ Rectangle {
         KeyframeGroup {
             target: bootTerminalText
             property: "color"
-            Keyframe {
-                value: "#00b4ff"
-                frame: 0
-            }
 
-            Keyframe {
-                value: "#00b4ff"
-                frame: 1038
-            }
-
-            Keyframe {
-                value: "#ff0000"
-                frame: 1039
-            }
+            Keyframe { value: "#00b4ff"; frame: 0 }
+            Keyframe { value: "#00b4ff"; frame: 1037 }
+            Keyframe { value: "#ff0000"; frame: 1038 }
         }
 
         KeyframeGroup {
