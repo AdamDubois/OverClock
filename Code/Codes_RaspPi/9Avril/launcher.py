@@ -5,7 +5,7 @@ import time
 
 # Chemins des scripts à lancer
 MAIN_UI = "/home/admin/Documents/Projet_InXtremis/code/Code/Codes_RaspPi/Qt/Interface_9avril/OverClockUI/OverClock/main.py"
-MAIN_GAME = "/home/admin/Documents/Projet_InXtremis/code/Code/Codes_RaspPi/9Avril/tout.py"
+MAIN_GAME = "/home/admin/Documents/Projet_InXtremis/code/Code/Codes_RaspPi/9Avril/tout_v2.py"
 
 print("Démarrage du launcher...")
 print(f"1. Lancement de l'interface: {MAIN_UI}")

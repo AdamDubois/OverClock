@@ -3,10 +3,9 @@ from .I2C_handler import I2C
 from .Log import logger
 import time
 
-I2C_handler = I2C()
-
 class RFID:
     def __init__(self):
+        self.i2c_handler = I2C()
         self.readers_values = [None] * NB_MODULES  # Valeurs actuelles des switchs
         self.last_readers_values = [None] * NB_MODULES  # Valeurs des switchs lors de la dernière vérification
         self.readers_values_temp = [None] * NB_MODULES  # Valeurs temporaires des switchs pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
@@ -22,11 +21,11 @@ class RFID:
         self.fini = True
 
     def close(self):
-        I2C_handler.bus.close()
+        self.i2c_handler.close()
 
     def play(self):
         try:
-            self.readers_values_temp = I2C_handler.decodeJSON(I2C_handler.getI2C())
+            self.readers_values_temp = self.i2c_handler.decodeJSON(self.i2c_handler.getI2C())
 
             if self.readers_values_temp is not None:
                 self.readers_values = self.readers_values_temp.copy()

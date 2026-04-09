@@ -55,6 +55,9 @@ class I2C:
         """
         readers_values = [None] * NB_MODULES  # Liste pour stocker les valeurs des readers
 
+        if json_str is None:
+            return None
+
         try:
             # Prétraitement : ajouter des guillemets autour des clés si absent
             # Ajoute des guillemets autour des clés non entourées

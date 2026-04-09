@@ -14,7 +14,7 @@ class Switchs:
         self.switch_values_temp = [False] * NB_MODULES  # Valeurs temporaires des switchs pour le décodage, utilisées pour éviter de mettre None dans switch_values en cas d'erreur de décodage. Sinon, lors du copy, on aurait une erreur car on ne peut pas faire copy de None.
         self.num_sequence = 0  # Numéro de la séquence actuelle
 
-    def test_sequence(self, valeur_sequence_attendue=VALEUR_SWITCHES_INIT.copy()):
+    def test_sequence(self, valeur_sequence_attendue=None):
         """
         Test la séquence attendue en fonction de la séquence définie dans SEQUENCE_ATTENDUE.
         La fonction parcourt la séquence attendue et compare les valeurs des switchs à chaque étape.
@@ -22,6 +22,9 @@ class Switchs:
         Sinon, elle affiche un message d'erreur et termine le programme.
         """
         try:
+            if valeur_sequence_attendue is None:
+                valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()
+
             logger.debug(f"[Test de la séquence] Séquence : 0, Valeurs des switchs attendues : {valeur_sequence_attendue}")
 
             for sequence, valeur in enumerate(SEQUENCE_ATTENDUE):
@@ -34,16 +37,15 @@ class Switchs:
 
             if valeur_sequence_attendue == VALEUR_SWITCH_FIN:
                 logger.info("[Test de la séquence] Séquence finale correcte !")
-                valeur_sequence_attendue = VALEUR_SWITCHES_INIT.copy()  # Réinitialiser pour la prochaine séquence
-                return
+                return True
 
             else:
                 logger.error("[Test de la séquence] Séquence finale incorrecte en fonction de la séquence attendue.")
-                quit()
+                return False
 
         except Exception as e:
             logger.error(f"[Test de la séquence] Erreur lors du test de la séquence : {e}")
-            quit()
+            return False
 
     def lancer_enigme(self):
         """
@@ -52,14 +54,17 @@ class Switchs:
         Si la séquence est correcte, elle affiche un message de succès. Sinon, elle affiche un message d'erreur.
         """
         try:
-            self.test_sequence()
+            if not self.test_sequence():
+                logger.error("[lancer_enigme] Vérification de séquence invalide, annulation du lancement.")
+                return False
 
             message = "{\"E\":" + str(NUM_ENIGME) + ",\"Etape\":" + str(MSG_LED_TOUT_ROUGE) + "}"
             self.I2C_handler.sendI2C(message) # Mettre toutes les DELs en rouge pour indiquer que l'énigme est lancée
+            return True
             
         except Exception as e:
             logger.error(f"[lancer_enigme] Erreur lors du lancement de l'énigme: {e}")
-            quit()
+            return False
 
     def mauvaise_sequence(self):
         """
