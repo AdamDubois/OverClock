@@ -1,6 +1,6 @@
-from .Config import *
-from .I2C_handler import I2C
-from .Log import logger
+from Config import *
+from I2C_handler import I2C
+from Log import logger
 import time
 
 class Switchs:
