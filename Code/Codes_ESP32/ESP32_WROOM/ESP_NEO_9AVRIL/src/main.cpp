@@ -14,7 +14,7 @@
 #define DATA_PIN_E1_2     5  // Pin de données pour la bande de LEDs
 #define DATA_PIN_E1_3     4  // Pin de données pour la bande de LEDs
 #define DATA_PIN_E1_4     3  // Pin de données pour la bande de LEDs
-#define DATA_PIN_E2       1  // Pin de données pour la bande de LEDs
+#define DATA_PIN_E2       0  // Pin de données pour la bande de LEDs
 
 #define NB_STRIP 6      // Nombre de bandes de LEDs
 #define NB_LEDS_STRIP_E1_0 60 // Nombre de LEDs sur la bande 1

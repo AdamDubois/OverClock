@@ -40,12 +40,12 @@
 // Si le mode de débogage est activé, les logs seront affichés dans le moniteur série.
 // Pour activer ou désactiver le mode de débogage, il suffit de changer la valeur de DEBUG_MODE à true ou false.
 // La macro debug(...) peut aussi être modifiée pour afficher ce qu'on veut dans le terminal série.
-#define DEBUG_MODE true // Mettre à true pour activer les logs série, false pour désactiver
+#define DEBUG_MODE false // Mettre à true pour activer les logs série, false pour désactiver
 
 #if DEBUG_MODE == true // Si le mode débogage est activé on définit les macros debug
     #define debug(...) printf("[DEBUG] : " __VA_ARGS__)
 #else
-    #define debug(...)
+    #define debug(...) // Si le mode de débogage est désactivé, la macro debug ne fait rien
 #endif
 
 // --------------------------------
