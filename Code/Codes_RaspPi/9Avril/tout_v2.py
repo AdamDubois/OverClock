@@ -215,8 +215,8 @@ def main():
 
     except KeyboardInterrupt:
         logger.info("Programme interrompu par l'utilisateur.")
-    except Exception as e:
-        logger.error(f"Erreur inattendue dans le programme principal: {e}")
+    #except Exception as e:
+        #logger.error(f"Erreur inattendue dans le programme principal: {e}")
     finally:
         stop_event.set()
         if button_thread is not None:

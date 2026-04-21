@@ -1,5 +1,5 @@
-from Config import I2C_BUS_NUMBER, ADDR_ESP_DEMANDE, NB_MODULES, NOM_ESP_DEMANDE, VALEUR_CLE, TEMPS_ATTENTE_ERREUR, ADDR_ESP_COMMANDE
-from Log import logger
+from .Config import I2C_BUS_NUMBER, ADDR_ESP_DEMANDE, NB_MODULES, NOM_ESP_DEMANDE, VALEUR_CLE, TEMPS_ATTENTE_ERREUR, ADDR_ESP_COMMANDE
+from .Log import logger
 from smbus2 import SMBus, i2c_msg      # Pour l'I2C (sudo pip install smbus2)
 import time
 import json

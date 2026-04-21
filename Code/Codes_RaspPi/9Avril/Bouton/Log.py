@@ -23,7 +23,7 @@ __status__ = "Production"
 
 
 import logging
-from Config import DEBUG_MODE
+from .Config import DEBUG_MODE
 
 # Configuration du logging
 logging.basicConfig(
