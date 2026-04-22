@@ -17,9 +17,9 @@ try:
     GPIO.setup(reset_pin_NEO, GPIO.OUT)
     print("Pin de reset mise à LOW pour réinitialiser les ESPs.")
     while True:
-        GPIO.output(reset_pin_IO, GPIO.LOW)
+        #GPIO.output(reset_pin_IO, GPIO.LOW)
         GPIO.output(reset_pin_RFID, GPIO.LOW)
-        GPIO.output(reset_pin_NEO, GPIO.LOW)
+        #GPIO.output(reset_pin_NEO, GPIO.LOW)
 except Exception as e:
     print(f"Erreur lors de la configuration de la pin de reset: {e}")
 except KeyboardInterrupt:
