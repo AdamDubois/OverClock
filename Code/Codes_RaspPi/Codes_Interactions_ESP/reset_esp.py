@@ -1,5 +1,6 @@
 # Met la pin de reset des esp a 0
 import RPi.GPIO as GPIO
+import time
 # Pin de reset pour les ESPs
 reset_pin_RFID = 36
 reset_pin_IO = 32
@@ -20,6 +21,8 @@ try:
         #GPIO.output(reset_pin_IO, GPIO.LOW)
         GPIO.output(reset_pin_RFID, GPIO.LOW)
         #GPIO.output(reset_pin_NEO, GPIO.LOW)
+        time.sleep(1)  # Maintenir le reset pendant 1 seconde
+        break
 except Exception as e:
     print(f"Erreur lors de la configuration de la pin de reset: {e}")
 except KeyboardInterrupt:
