@@ -1,3 +1,12 @@
+/*
+Fichier : Enigme3.qml
+Description : Interface de l’énigme 3.
+
+- Affiche une transition entre deux écrans (animation)
+- Présente le module de contrôle puis le module de désamorçage
+- Gère l’affichage du timer
+*/
+
 import QtQuick
 import QtQuick.Timeline 1.0
 
@@ -9,6 +18,7 @@ Rectangle {
 
     property int timeRemaining: 0
 
+    // Convertit un temps en secondes au format MM:SS
     function formatTime(seconds) {
         var min = Math.floor(seconds / 60)
         var sec = seconds % 60
@@ -16,12 +26,14 @@ Rectangle {
                sec.toString().padStart(2, "0")
     }
 
+    // Réinitialise la timeline et relance l’animation depuis le début
     function restartAnimation() {
         timelineAnim.stop()
         timeline.currentFrame = 0
         timelineAnim.start()
     }
 
+    // Relance l’animation lorsque le composant devient visible
     onVisibleChanged: {
         if (visible) {
             restartAnimation()
