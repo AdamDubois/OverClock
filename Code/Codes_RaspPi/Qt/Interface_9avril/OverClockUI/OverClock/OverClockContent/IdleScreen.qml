@@ -1,3 +1,11 @@
+/*
+Fichier : IdleScreen.qml
+Description : Écran d’attente avant le début du jeu.
+
+- Affiche le logo OverClock
+- Applique un effet lumineux animé (clignotement)
+*/
+
 import QtQuick
 
 Rectangle {
