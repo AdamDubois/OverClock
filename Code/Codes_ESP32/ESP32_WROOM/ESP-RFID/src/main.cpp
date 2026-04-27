@@ -2,14 +2,19 @@
  * @file main.cpp
  * @brief Fichier principal pour la gestion des lecteurs RFID MFRC522 avec ESP32 en tant qu'esclave I2C.
  * @author Adam Dubois
- * @date 2026-02-05
+ * @date 2026-04-23
  * @version 1.0
  * 
  * Ce code initialise plusieurs lecteurs RFID MFRC522 connectés à un ESP32 configuré en tant qu'esclave I2C.
- * Lorsqu'une demande est reçue du maître I2C, l'ESP32 scanne les lecteurs RFID, lit les UIDs des cartes présentes,
- * et envoie les données formatées en JSON au maître.
+ * Scanne en permanence les lecteurs pour détecter les cartes présentes et stocke leurs UIDs. 
+ * Lorsque le maître I2C fait une demande, l'ESP32 envoie les UIDs des cartes présentes au format JSON.
  * 
  * La configuration des broches et des paramètres se trouve dans le fichier config.h. (include/config.h)
+ * 
+ * IMPORTANT BUG POSSIBLE : J'ai remarqué que si la puissance des antennes sont trop faible, un lecteur va avoir du mal à lire sa carte.
+ * Si la puissance est trop forte, un autre lecteur va avoir du mal à lire sa carte. J'ai trouvé un compromis à 0x20, 
+ * ça me semble fonctionner correctement pour les 4 lecteurs, en 10 minutes, aucune carte n'est passée inaperçue, mais possibilité que la valeur ne soit pas la même tout le temps.
+ * La valeur de puissance peut être ajustée dans config.h avec la constante MFRC522_POWER, la valeur doit être comprise entre 0x01 et 0xFF, plus la valeur est élevée, plus la puissance est forte.
  */
 
 
@@ -25,7 +30,7 @@
 // Variables globales
 // ============================================================================================================
 //Créer les instances MFRC522 pour chaque lecteur
-MFRC522 mfrc522[NR_OF_READERS];   // Create MFRC522 instance.
+MFRC522 mfrc522[NB_OF_READERS];   // Create MFRC522 instance.
 
 // Instance de la classe Simple_Neo pour gérer la LED de débogage
 Debug_Neo Neo;
@@ -37,7 +42,7 @@ byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN};
 String g_jsonData = "";
 
 //Strings contenant les UID des cartes lues
-String g_uidReaders[NR_OF_READERS] = {"NONE", "NONE", "NONE", "NONE"}; // UIDs des cartes lues
+String g_uidReaders[NB_OF_READERS] = {"NONE", "NONE", "NONE", "NONE"}; // UIDs des cartes lues
 
 
 
@@ -60,7 +65,14 @@ String formatDataAsJSON();
 // Setup et Loop
 // ============================================================================================================
 /*
-Brief : Initialisation de l'ESP32 en tant qu'esclave I2C et des lecteurs RFID MFRC522.
+Brief : 
+  - Initialisation de l'ESP32 en tant qu'esclave I2C et des lecteurs RFID MFRC522.
+
+Paramètres :
+  - Aucun paramètre, les broches et paramètres sont définis dans config.h.
+
+Retour :
+  - Aucun retour, l'ESP32 est configuré en tant qu'esclave I2C et prêt à recevoir des demandes du maître.
 */
 void setup() {
   initSerial();
@@ -80,7 +92,14 @@ void setup() {
 }
 
 /*
-Brief : Lit en permanence les lecteurs RFID pour mettre à jour les UIDs des cartes présentes et prépare les données JSON à envoyer au maître I2C lorsqu'une demande est reçue.
+Brief : 
+  - Lit en permanence les lecteurs RFID pour mettre à jour les UIDs des cartes présentes et prépare les données JSON à envoyer au maître I2C lorsqu'une demande est reçue.
+
+Paramètres :
+  - Aucun paramètre, les lecteurs RFID et les broches sont définis dans config.h.
+
+Retour :
+  - Aucun retour, la fonction met à jour les UIDs des cartes et les données JSON globales.
 */
 void loop(){
   resetUIDs(); // Réinitialiser les UIDs à "NONE" à chaque boucle pour éviter d'envoyer des données obsolètes au maître
@@ -95,7 +114,14 @@ void loop(){
 // ============================================================================================================
 
 /*
-Brief : Initialise le port série pour le débogage si le mode de débogage est activé dans config.h.
+Brief : 
+  - Initialise le port série pour le débogage si le mode de débogage est activé dans config.h.
+
+Paramètres :
+  - Aucun paramètre, la configuration du débogage est définie dans config.h.
+
+Retour :
+  - Aucun retour, le port série est initialisé si le mode de débogage est activé, sinon la fonction ne fait rien.
 */
 void initSerial()
 {
@@ -108,8 +134,15 @@ void initSerial()
 }
 
 /*
-Brief : Initialise l'ESP32 en tant qu'esclave I2C avec l'adresse définie dans config.h et 
-configure la fonction de rappel pour les demandes du maître.
+Brief : 
+  - Initialise l'ESP32 en tant qu'esclave I2C avec l'adresse définie dans config.h.
+  - Configure la fonction de rappel pour les demandes du maître.
+
+Paramètres :
+  - Aucun paramètre, les broches et paramètres sont définis dans config.h.
+
+Retour :
+  - Aucun retour, l'ESP32 est configuré en tant qu'esclave I2C et prêt à recevoir des demandes du maître.
 */
 void initI2C()
 {
@@ -120,19 +153,27 @@ void initI2C()
 }
 
 /*
-Brief : Initialise le SPI pour les lecteurs RFID MFRC522 et configure chaque lecteur avec les broches définies dans config.h.
+Brief : 
+  - Initialise le SPI pour les lecteurs RFID MFRC522 et configure chaque lecteur avec les broches définies dans config.h.
+  - Réduit la puissance de sortie des lecteurs RFID pour éviter les interférences, et éteint les antennes pour limiter les interférences entre les lecteurs.
+
+Paramètres :
+  - Aucun paramètre, les broches et paramètres sont définis dans config.h.
+
+Retour :
+  - Aucun retour, les lecteurs RFID sont initialisés et prêts à être utilisés.
 */
 void initSPI()
 {
   // Initialiser SPI matériel avec broches compatibles ESP32-C3
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, -1); // -1: pas de SS global
+  SPI.setFrequency(10000); // Fréquence de 10 kHz pour une communication stable avec les lecteurs RFID (les cables sont longs) la vitesse max est de 10 MHz, mais cela peut causer des problèmes de communication avec des câbles longs ou dans un environnement bruyant électriquement, donc on réduit la vitesse pour améliorer la fiabilité
 
-  for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) { // Initialisation de chaque lecteur MFRC522
+  for (uint8_t reader = 0; reader < NB_OF_READERS; reader++) { // Initialisation de chaque lecteur MFRC522
     mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN); // Utilise la signature compatible
-    
-    // Réduire la puissance d'émission (0x00 = max, 0x3F = min)
-    mfrc522[reader].PCD_WriteRegister(MFRC522::CWGsPReg, 0x20); // Valeur à ajuster
-    
+    mfrc522[reader].PCD_WriteRegister(MFRC522::CWGsPReg, MFRC522_POWER); // Réduit la puissance de sortie pour éviter les interférences entre les lecteurs RFID (La puissance minimum est de 0x01, la puissance max est de 0xFF)
+    mfrc522[reader].PCD_AntennaOff(); // Éteint toutes les antennes pour limiter les interférences puisque tous les lecteurs sont proches
+
     if (DEBUG_MODE)
     {
       Serial.print(F("[DEBUG] Reader "));
@@ -144,8 +185,15 @@ void initSPI()
 }
 
 /*
-Brief : Fonction de rappel appelée lorsqu'une demande est reçue du maître I2C.
-Scanne les lecteurs RFID, lit les UIDs des cartes, et envoie les données formatées en JSON au maître.
+Brief : 
+  - Fonction de rappel appelée lorsqu'une demande est reçue du maître I2C.
+  - Récupère les données JSON formatées globales et les envoie au maître I2C.
+
+Paramètres :
+  - Aucun paramètre, les données JSON sont stockées dans la variable globale g_jsonData
+
+Retour :
+  - Aucun retour, les données sont envoyées au maître I2C via Wire.write()
 */
 void onRequest() {
   Neo.working(); // Indiquer que le système est en train de travailler
@@ -155,56 +203,62 @@ void onRequest() {
   Wire.write(g_jsonData.c_str()); // Envoyer les données en mémoire au maître I2C
   Wire.write((uint8_t)0x00); // Indicateur de fin de message
 
-  debug("Données envoyées au maître.\n");
+  debug("Données envoyées au maître. %s\n", g_jsonData.c_str());
+
   Neo.success(); // Indiquer que les données ont été envoyées avec succès
-  //delay(50); // Petite pause pour laisser le temps au maître de lire les données
   Neo.waiting(); // Revenir à l'état d'attente
-  //delay(50); // Petite pause pour éviter les rebonds
 }
 
 /*
-Brief : Réinitialise les UIDs des lecteurs RFID à "NONE".
+Brief : 
+  - Réinitialise les UIDs des lecteurs RFID à "NONE".
+
+Paramètres :
+  - Aucun paramètre.
+
+Retour :
+  - Aucun retour, les UIDs sont stockés dans le tableau global g_uidReaders.
 */
 void resetUIDs() {
-  for (int i = 0; i < NR_OF_READERS; i++) {
+  for (int i = 0; i < NB_OF_READERS; i++) {
     g_uidReaders[i] = "NONE";
   }
 }
 
 /*
-Brief : Scanne tous les lecteurs RFID connectés et met à jour les UIDs des cartes lues dans g_uidReaders.
+Brief : 
+  - Scanne tous les lecteurs RFID connectés et met à jour les UIDs des cartes lues dans g_uidReaders.
+
+Paramètres : 
+  - Aucun paramètre.
+
+Retour : 
+  - Aucun retour, les UIDs sont stockés dans le tableau global g_uidReaders.
 */
 void scanReaders() {
-  for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) { // Parcourir chaque lecteur MFRC522
-    debug("Scanning reader %d...\n", reader);
-    // Wake up ALL cards (including halted ones)
-    byte bufferATQA[2];
-    byte bufferSize = sizeof(bufferATQA);
-    MFRC522::StatusCode status = mfrc522[reader].PICC_WakeupA(bufferATQA, &bufferSize); // Wake up cards
-    
-    if (status == MFRC522::STATUS_OK) { // If a card is found
-      if (mfrc522[reader].PICC_ReadCardSerial()) { // Read the card serial number
-        g_uidReaders[reader] = getUIDsAsString(mfrc522[reader].uid.uidByte, mfrc522[reader].uid.size); // Convert UID to string
+  for (int i = 0; i < NB_OF_READERS; i++) {
+    mfrc522[i].PCD_AntennaOn(); // Allumer l'antenne pour commencer à scanner
 
-        // Halt PICC
-        mfrc522[reader].PICC_HaltA();
-        // Stop encryption on PCD
-        mfrc522[reader].PCD_StopCrypto1();
-      }
+    // Look for new cards
+    if (mfrc522[i].PICC_IsNewCardPresent() && mfrc522[i].PICC_ReadCardSerial()) { // Si une nouvelle carte est présente et que son UID peut être lu
+      g_uidReaders[i] = getUIDsAsString(mfrc522[i].uid.uidByte, mfrc522[i].uid.size); // Convertir l'UID en string et le stocker dans le tableau global
     }
 
-    debug("Reader %d, Card UID: %s\n", reader, g_uidReaders[reader].c_str());
+    mfrc522[i].PCD_AntennaOff(); // Éteindre l'antenne pour éviter les interférences avec les autres lecteurs RFID
+    debug("Reader %d, Card UID: %s\n", i, g_uidReaders[i].c_str());
   }
 }
 
 /*
-Brief : Convertit un tableau d'octets représentant un UID en une chaîne hexadécimale.
+Brief : 
+  - Convertit un tableau d'octets représentant un UID en une chaîne hexadécimale.
 
 Paramètres :
   - buffer : Pointeur vers le tableau d'octets de l'UID.
   - bufferSize : Taille du tableau d'octets.
 
-Retour : Chaîne hexadécimale représentant l'UID.
+Retour : 
+  - Chaîne hexadécimale représentant l'UID.
 */
 String getUIDsAsString(byte *buffer, byte bufferSize) {
   String uidString = ""; // Initialiser une chaîne vide pour l'UID
@@ -217,19 +271,26 @@ String getUIDsAsString(byte *buffer, byte bufferSize) {
 }
 
 /*
-Brief : Formate les données des lecteurs RFID en une chaîne JSON.
-Retour : Chaîne JSON contenant le nom de l'ESP32 et les UIDs des lecteurs RFID.
+Brief : 
+  - Formate les données des lecteurs RFID en une chaîne JSON.
+
+Paramètres :
+  - Aucun paramètre, les UIDs des lecteurs sont stockés dans le tableau global g_uidReaders et le nom de l'ESP32 est défini dans config.h.
+
+Retour : 
+  - Chaîne JSON contenant le nom de l'ESP32 et les UIDs des lecteurs RFID.
 */
 String formatDataAsJSON() {
   String jsonString = "{N:\"" + ESP32_NAME + "\","; // Réinitialiser la chaîne avec le nom de l'ESP32
 
-  for (int i = 0; i < NR_OF_READERS; i++) {
+  for (int i = 0; i < NB_OF_READERS; i++) {
     jsonString += "R" + String(i) + ":\"" + g_uidReaders[i] + "\"";
-    if (i < NR_OF_READERS - 1) {
+    if (i < NB_OF_READERS - 1) {
       jsonString += ",";
     }
   }
   jsonString += "}";
 
+  debug("Formatted JSON: %s\n", jsonString.c_str());
   return jsonString;
 }
