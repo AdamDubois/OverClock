@@ -1,3 +1,13 @@
+/*
+Fichier : Enigme2.qml
+Description : Interface de l’énigme 2.
+
+- Simule un terminal avec séquence de démarrage animée
+- Affiche une progression visuelle (boot système)
+- Gère l’affichage du timer
+- Transition vers le module de jeu après le démarrage
+*/
+
 import QtQuick
 import QtQuick.Timeline 1.0
 
@@ -16,7 +26,7 @@ Rectangle {
     // ======================
     property string terminalLog: ""
 
-
+    // Initialise le contenu du terminal
     function initTerminal() {
         clearTerminal()
 
@@ -28,14 +38,17 @@ Rectangle {
         appendLine("Accès refusé")
     }
 
+    // Ajoute une ligne dans le terminal
     function appendLine(message) {
         terminalLog += "> " + message + "\n"
     }
 
+    // Réinitialise le terminal
     function clearTerminal() {
         terminalLog = ""
     }
 
+    // Convertit un temps en secondes au format MM:SS
     function formatTime(seconds) {
         var min = Math.floor(seconds / 60)
         var sec = seconds % 60
@@ -44,6 +57,7 @@ Rectangle {
                sec.toString().padStart(2, '0')
     }
 
+    // Réinitialise et relance l’animation de la timeline
     function restartAnimation() {
         timelineAnim.stop()
         timeline.currentFrame = 0
@@ -54,10 +68,12 @@ Rectangle {
         timelineAnim.start()
     }
 
+    // Initialise le terminal au chargement du composant
     Component.onCompleted: {
         initTerminal()
     }
 
+    // Relance l’animation lorsque le composant devient visible
     onVisibleChanged: {
         if (visible) {
             restartAnimation()
