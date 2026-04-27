@@ -1,0 +1,10 @@
+# requirements.txt for Raspberry Pi Python code
+# This file lists pip-installable Python dependencies used by scripts under Code/Codes_RaspPi/.
+# Standard library modules (time, json, socket, logging, threading, subprocess, sys, re, random, etc.) are NOT listed.
+
+# Provenance: Code/Codes_RaspPi/Codes_Interactions_ESP/*.py, Code/Codes_RaspPi/Enigmes/1/*.py, Code/Codes_RaspPi/9Avril/*.py, Code/Codes_RaspPi/9Avril/RFID/*.py
+smbus2
+
+# Provenance: Code/Codes_RaspPi/Codes_Interactions_ESP/rst_ESP.py, Code/Codes_RaspPi/Codes_Interactions_ESP/reset_esp.py, Code/Codes_RaspPi/9Avril/tout_v2.py
+# Note: this is the Raspberry Pi GPIO package (RPi.GPIO)
+RPi.GPIO

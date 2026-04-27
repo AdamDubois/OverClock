@@ -1,3 +1,13 @@
+/*
+Fichier : FinScreen.qml
+Description : Écran de fin du jeu.
+
+- Affiche un message de réussite (désamorçage terminé)
+- Présente le temps restant
+- Ajoute des effets visuels (scan, glow, animation)
+*/
+
+
 import QtQuick
 import Qt5Compat.GraphicalEffects
 
@@ -8,6 +18,7 @@ Rectangle {
 
     property int timeRemaining: 0
 
+    // Convertit un temps en secondes au format MM:SS
     function formatTime(seconds) {
         var min = Math.floor(seconds / 60)
         var sec = seconds % 60
