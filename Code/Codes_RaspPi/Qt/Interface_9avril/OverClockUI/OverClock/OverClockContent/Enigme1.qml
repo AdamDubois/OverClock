@@ -1,3 +1,13 @@
+/*
+Fichier : Enigme1.qml
+Description : Interface de l’énigme 1.
+
+- Affiche une séquence de démarrage animée (boot)
+- Simule un terminal avec progression et messages
+- Gère l’état des capteurs RFID
+- Affiche le timer du jeu
+*/
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Timeline 1.0
@@ -21,6 +31,7 @@ Rectangle {
     property int enigme: 0
     property var rfidState: [false, false, false, false]
 
+    // boot similé
     function bootMessage(value) {
         if (value < 20)
             return "Initialisation des modules système..."
@@ -38,6 +49,7 @@ Rectangle {
             return "Système prêt."
     }
 
+    // Ajoute un message de démarrage (boot) dans le terminal en fonction de la progression
     function appendBootMessage(value) {
         var step = -1
 
@@ -62,7 +74,7 @@ Rectangle {
         }
     }
 
-
+    // Convertit un temps en secondes au format MM:SS
     function formatTime(seconds) {
         var min = Math.floor(seconds / 60)
         var sec = seconds % 60
@@ -70,6 +82,7 @@ Rectangle {
                 sec.toString().padStart(2, "0")
     }
 
+    // Réinitialise et relance l’animation lorsque l’écran devient visible
     onVisibleChanged: {
         if (visible) {
             terminalLog = ""
@@ -81,6 +94,7 @@ Rectangle {
         }
     }
 
+    // Met à jour le terminal en fonction de la progression
     onProgressValueChanged: {
         appendBootMessage(progressValue)
     }
@@ -391,7 +405,7 @@ Rectangle {
     }
 
 
-
+    // Cette timeline gère l’ensemble des animations
     Timeline {
         id: timeline
         enabled: true
