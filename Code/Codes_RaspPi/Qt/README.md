@@ -10,4 +10,4 @@ Vous trouverez une première interface graphique pour les trois énigmes propos�
 
 
 - test/ : contient une première version d’interface utilisateur très simple servant aux tests et à la validation de base.
--Interface_9avril : contient l'ensemble des fichiers pour le fonctionnement de l'interface graphique pour les trois énigmes proposées à la soirée entrepreneuriales. 
+- Interface_9avril : contient l'ensemble des fichiers pour le fonctionnement de l'interface graphique pour les trois énigmes proposées à la soirée entrepreneuriales. 
