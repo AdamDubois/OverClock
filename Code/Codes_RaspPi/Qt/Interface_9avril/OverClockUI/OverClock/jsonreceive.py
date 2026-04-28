@@ -113,7 +113,6 @@ class JsonReceive(QObject):
         with self._lock:
             self._time_remaining = 300 # 5 minutes
         self.timeRemainingChanged.emit()
-        print("[TIMER] reset à 900")
 
     @Slot(int)
     def set_timer(self, value):
@@ -121,7 +120,6 @@ class JsonReceive(QObject):
         with self._lock:
             self._time_remaining = max(0, int(value))
         self.timeRemainingChanged.emit()
-        print(f"[TIMER] nouvelle valeur : {self._time_remaining}")
 
 
     def partir_serveur(self):
@@ -153,7 +151,6 @@ class JsonReceive(QObject):
 
             if emit_needed:
                 self.timeRemainingChanged.emit()
-                print(f"[TIMER] {current_time}")
 
 
 
