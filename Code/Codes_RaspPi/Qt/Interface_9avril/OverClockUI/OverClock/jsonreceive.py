@@ -111,7 +111,7 @@ class JsonReceive(QObject):
     def reset_timer(self):
         # reset du timer
         with self._lock:
-            self._time_remaining = 900
+            self._time_remaining = 300 # 5 minutes
         self.timeRemainingChanged.emit()
         print("[TIMER] reset à 900")
 
