@@ -9,9 +9,9 @@ Description : Interface principale de l’application.
 - Affiche le timer et les données en temps réel
 */
 
-//-------------------------------//
-// Liste des imports nécessaires //
-//-------------------------------//
+//---------------------------------------------------------------//
+//--------------- Liste des imports nécessaires -----------------//
+//---------------------------------------------------------------//
 import QtQuick         // fournit les éléments de base
 import QtQuick.Window  // permet de créer une fenêtre (Window)
 import "."             // accès aux composants locaux
