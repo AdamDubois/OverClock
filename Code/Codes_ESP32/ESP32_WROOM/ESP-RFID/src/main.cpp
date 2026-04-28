@@ -8,6 +8,9 @@
  * Ce code initialise plusieurs lecteurs RFID MFRC522 connectés à un ESP32 configuré en tant qu'esclave I2C.
  * Scanne en permanence les lecteurs pour détecter les cartes présentes et stocke leurs UIDs. 
  * Lorsque le maître I2C fait une demande, l'ESP32 envoie les UIDs des cartes présentes au format JSON.
+ * Pour éviter des cas de faux négatifs lors de la lecture des cartes, un compteur de "NONE" est utilisé pour chaque lecteur, 
+ * et une carte n'est considérée comme absente que si plusieurs lectures consécutives retournent "NONE". La quantité de lectures 
+ * consécutives nécessaires pour considérer une carte comme absente peut être ajustée dans config.h avec la constante NONE_COUNTER_THRESHOLD.
  * 
  * La configuration des broches et des paramètres se trouve dans le fichier config.h. (include/config.h)
  * 
@@ -44,6 +47,11 @@ String g_jsonData = "";
 //Strings contenant les UID des cartes lues
 String g_uidReaders[NB_OF_READERS] = {"NONE", "NONE", "NONE", "NONE"}; // UIDs des cartes lues
 
+// Compteur pour sécuriser une lecture de carte
+// Il arrive qu'un lecteur à de la difficulté à lire ce qui créer des trous de NONE alors qu'il y a une carte.
+// On créer donc un compteur pour chaque reader pour compteur le nombre de NONE avant de réelement mettre la valeur a NONE
+int g_noneCounters[NB_OF_READERS] = {0, 0, 0, 0}; // Compteurs pour sécuriser les lectures de cartes
+
 
 
 // ============================================================================================================
@@ -54,7 +62,6 @@ void initSerial();
 void initI2C();
 void initSPI();
 void onRequest();
-void resetUIDs();
 void scanReaders();
 String getUIDsAsString(byte *buffer, byte bufferSize);
 String formatDataAsJSON();
@@ -102,7 +109,6 @@ Retour :
   - Aucun retour, la fonction met à jour les UIDs des cartes et les données JSON globales.
 */
 void loop(){
-  resetUIDs(); // Réinitialiser les UIDs à "NONE" à chaque boucle pour éviter d'envoyer des données obsolètes au maître
   scanReaders(); // Scanner les lecteurs RFID pour mettre à jour les UIDs des cartes présentes
   g_jsonData = formatDataAsJSON(); // Mettre à jour les données JSON globales pour qu'elles soient prêtes à être envoyées lorsque le maître I2C fera une demande
 }
@@ -211,22 +217,6 @@ void onRequest() {
 
 /*
 Brief : 
-  - Réinitialise les UIDs des lecteurs RFID à "NONE".
-
-Paramètres :
-  - Aucun paramètre.
-
-Retour :
-  - Aucun retour, les UIDs sont stockés dans le tableau global g_uidReaders.
-*/
-void resetUIDs() {
-  for (int i = 0; i < NB_OF_READERS; i++) {
-    g_uidReaders[i] = "NONE";
-  }
-}
-
-/*
-Brief : 
   - Scanne tous les lecteurs RFID connectés et met à jour les UIDs des cartes lues dans g_uidReaders.
 
 Paramètres : 
@@ -242,6 +232,14 @@ void scanReaders() {
     // Look for new cards
     if (mfrc522[i].PICC_IsNewCardPresent() && mfrc522[i].PICC_ReadCardSerial()) { // Si une nouvelle carte est présente et que son UID peut être lu
       g_uidReaders[i] = getUIDsAsString(mfrc522[i].uid.uidByte, mfrc522[i].uid.size); // Convertir l'UID en string et le stocker dans le tableau global
+      g_noneCounters[i] = 0; // Réinitialiser le compteur de NONE pour ce lecteur
+    }
+    else if (g_noneCounters[i] < NONE_COUNTER_THRESHOLD && g_uidReaders[i] != "NONE") { // Si aucune carte n'est présente, incrémenter le compteur de NONE pour ce lecteur
+      g_noneCounters[i]++;
+    }
+    else {
+      g_uidReaders[i] = "NONE"; // Si aucune carte n'est présente, stocker "NONE" pour ce lecteur
+      g_noneCounters[i] = 0; // Réinitialiser le compteur de NONE pour ce lecteur
     }
 
     mfrc522[i].PCD_AntennaOff(); // Éteindre l'antenne pour éviter les interférences avec les autres lecteurs RFID
