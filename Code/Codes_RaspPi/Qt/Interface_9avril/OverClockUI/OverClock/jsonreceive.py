@@ -65,7 +65,7 @@ class JsonReceive(QObject):
         self._game_start = False
         self._enigme = 0
         self._rfid = [False, False, False, False]
-        self._time_remaining = 900
+        self._time_remaining = 300 # 5 minutes en secondes
 
         # Variables de contrôle des threads
         self._running = False
